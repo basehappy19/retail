@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuro-Retail OS v5.0 | Ultimate Control</title>
+    <title>Neuro-Retail OS v6.1 | Checkout Fixed</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,34 +13,35 @@
         body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; user-select: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* Grid พื้นหลัง */
         .floor-grid {
             background-image: 
                 linear-gradient(rgba(30, 41, 59, 0.3) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(30, 41, 59, 0.3) 1px, transparent 1px);
             background-size: 40px 40px;
             background-color: #0b1120;
-            transition: filter 0.5s ease; /* For lighting effect */
+            transition: filter 0.5s ease;
         }
 
-        /* Drag Cursor Logic */
         .grab-cursor { cursor: grab; }
         .grabbing-cursor { cursor: grabbing; }
 
-        /* Customer Dot */
-        .customer-dot { transition: transform 0.2s, background-color 0.5s; cursor: pointer; z-index: 20; }
-        .customer-dot:hover { transform: scale(1.8); box-shadow: 0 0 15px white; z-index: 50; }
+        .customer-dot { transition: transform 0.1s linear, background-color 0.5s; cursor: pointer; z-index: 20; }
+        .customer-dot:hover { transform: scale(1.5); box-shadow: 0 0 15px white; z-index: 50; }
 
-        /* Store Ambience Overlay (For Lighting/Temp) */
-        #ambience-overlay {
-            pointer-events: none;
-            mix-blend-mode: overlay;
-            transition: background-color 1s ease;
-        }
+        /* Shelf Animation */
+        .shelf-interact { animation: bounce 0.3s ease; border-color: #fff !important; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
-        /* Scrollbar Hide */
+        /* Lane Visuals */
+        .lane-box { transition: all 0.5s ease; z-index: 5; }
+        .lane-closed { opacity: 0.4; border-style: dashed; background-color: rgba(15, 23, 42, 0.8); }
+        .lane-open { opacity: 1; border-style: solid; background-color: rgba(6, 78, 59, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
+
+        /* Floor Markings */
+        .queue-line { border-bottom: 2px dashed rgba(255,255,255,0.2); pointer-events: none; }
+
+        #ambience-overlay { pointer-events: none; mix-blend-mode: overlay; transition: background-color 1s ease; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="flex h-screen w-screen p-2 gap-2 text-xs">
@@ -48,7 +49,7 @@
     <aside class="w-64 bg-slate-900 rounded-lg flex flex-col border border-slate-700 shadow-xl z-30">
         <div class="p-3 border-b border-slate-700 bg-slate-950/50">
             <h1 class="text-lg font-bold text-cyan-400 tracking-wider"><i class="fa-solid fa-eye"></i> OMNI-RETAIL</h1>
-            <p class="text-[9px] text-slate-500 uppercase tracking-widest">Store Intelligence System v5.0</p>
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest">Store Intelligence System v6.1</p>
         </div>
 
         <div class="p-3 flex-1 overflow-y-auto space-y-4">
@@ -73,30 +74,27 @@
                 <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-bullhorn"></i> Sales Triggers
                 </h2>
-                <p class="text-[9px] text-slate-500 mb-2">Manual override to convert hesitant customers.</p>
                 <div class="space-y-2">
                     <button onclick="triggerPromo('FLASH')" class="w-full py-2 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded text-white font-bold shadow-lg transform active:scale-95 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-bolt"></i> FLASH SALE (30s)
+                        <i class="fa-solid fa-bolt"></i> FLASH SALE
                     </button>
                     <button onclick="triggerPromo('DISCOUNT')" class="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded border border-slate-500 text-slate-200 font-bold transform active:scale-95 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-tag"></i> Send 15% Coupon
+                        <i class="fa-solid fa-tag"></i> Send Coupon
                     </button>
                 </div>
             </div>
-
+            
             <div>
-                <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Camera Status</h2>
+                <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Queue Status</h2>
                 <div class="space-y-1 bg-slate-950 p-2 rounded border border-slate-800 text-[10px]">
-                    <div class="flex justify-between"><span class="text-slate-400">CAM-01 (Entrance)</span><span class="text-green-500">● REC</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">CAM-02 (Aisle)</span><span class="text-green-500">● LIVE</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">CAM-03 (Checkout)</span><span class="text-green-500">● REC</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Lane 1-3</span><span class="text-green-500">● OPEN</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Lane 4 (Auto)</span><span id="lane4-status-text" class="text-slate-500">● CLOSED</span></div>
                 </div>
             </div>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col gap-2 overflow-hidden relative">
-        
         <div class="grid grid-cols-4 gap-2 h-14 shrink-0 z-10">
             <div class="bg-slate-800 rounded border border-slate-700 px-3 flex flex-col justify-center">
                 <span class="text-[9px] text-slate-400 uppercase">Customers</span>
@@ -120,23 +118,22 @@
         </div>
 
         <div class="flex-1 bg-slate-900 rounded border border-slate-700 relative overflow-hidden shadow-inner group cursor-grab active:cursor-grabbing" id="map-container">
-            
-            <div id="store-world" class="relative h-full w-[2400px] floor-grid transition-transform duration-75 ease-out">
-                
+            <div id="store-world" class="relative h-full w-[2400px] floor-grid">
                 <div id="ambience-overlay" class="absolute inset-0 z-0 bg-transparent"></div>
-
+                
                 <div class="absolute top-4 left-4 text-[10px] text-slate-500 bg-slate-900/80 px-2 py-1 rounded border border-slate-700 pointer-events-none z-50 select-none">
-                    <i class="fa-solid fa-hand"></i> Click & Drag to Pan
+                    <i class="fa-solid fa-hand"></i> Drag to Pan
                 </div>
 
+                <div id="floor-markings" class="z-0 relative"></div>
                 <div id="shelves-layer" class="z-10 relative"></div>
-                <div id="customer-layer" class="absolute inset-0 z-20 pointer-events-none"></div> </div>
+                <div id="checkout-layer" class="z-10 relative pointer-events-none"></div>
+                <div id="customer-layer" class="absolute inset-0 z-20 pointer-events-none"></div>
+            </div>
         </div>
-
     </main>
 
     <aside class="w-72 flex flex-col gap-2">
-        
         <div class="bg-gradient-to-b from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
@@ -145,328 +142,435 @@
                 <label class="inline-flex items-center cursor-pointer">
                     <span class="mr-2 text-[9px] text-slate-400" id="auto-label">AUTO</span>
                     <input type="checkbox" checked id="auto-toggle" class="sr-only peer" onchange="toggleAutoMode()">
-                    <div class="relative w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500"></div>
+                    <div class="relative w-8 h-4 bg-slate-700 rounded-full peer peer-checked:bg-cyan-500 after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
             </div>
-
-            <div class="space-y-3" id="manual-controls">
-                <div>
-                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
-                        <span>Lighting</span>
-                        <span id="light-val">Warm</span>
-                    </div>
-                    <input type="range" min="0" max="100" value="50" class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-yellow-400" id="light-slider" disabled>
-                </div>
-                <div>
-                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
-                        <span>Temperature (AC)</span>
-                        <span id="temp-val">24°C</span>
-                    </div>
-                    <input type="range" min="18" max="28" value="24" class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-400" id="temp-slider" disabled>
-                </div>
-                <div>
-                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
-                        <span>Background Music</span>
-                        <span id="music-val" class="text-cyan-400 animate-pulse">♪ Pop Hits</span>
-                    </div>
-                    <select id="music-select" class="w-full bg-slate-950 border border-slate-700 text-slate-300 text-[10px] rounded p-1" disabled>
-                        <option value="POP">Pop Hits (Normal)</option>
-                        <option value="JAZZ">Slow Jazz (Relax)</option>
-                        <option value="EDM">Upbeat EDM (Rush)</option>
-                    </select>
-                </div>
+            <div class="space-y-2 opacity-50" id="manual-controls">
+                <div class="h-1 bg-slate-600 rounded w-full"></div>
+                <div class="h-1 bg-slate-600 rounded w-full"></div>
             </div>
         </div>
 
         <div class="flex-1 bg-slate-900 rounded-lg border border-slate-700 flex flex-col overflow-hidden transition-all duration-300" id="logs-panel">
-            <div class="p-2 bg-slate-800 border-b border-slate-700 text-[10px] font-bold text-slate-400 flex justify-between items-center cursor-pointer hover:bg-slate-700 transition" onclick="toggleLogs()">
-                <span>BEHAVIOR LOGS</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-green-500 text-[9px]">● LIVE</span>
-                    <i class="fa-solid fa-chevron-down transition-transform" id="log-arrow"></i>
-                </div>
+            <div class="p-2 bg-slate-800 border-b border-slate-700 text-[10px] font-bold text-slate-400 flex justify-between items-center cursor-pointer hover:bg-slate-700" onclick="toggleLogs()">
+                <span>SMART LOGS</span>
+                <i class="fa-solid fa-chevron-down transition-transform" id="log-arrow"></i>
             </div>
-            <div id="logs" class="flex-1 overflow-y-auto p-2 space-y-1.5 mono text-[9px] h-full">
-                </div>
+            <div id="logs" class="flex-1 overflow-y-auto p-2 space-y-1.5 mono text-[9px] h-full"></div>
         </div>
     </aside>
 
     <script>
-        // === CONFIGURATION ===
+        // === CONFIG ===
         const container = document.getElementById('map-container');
         const world = document.getElementById('store-world');
         const customerLayer = document.getElementById('customer-layer');
         const shelfLayer = document.getElementById('shelves-layer');
+        const checkoutLayer = document.getElementById('checkout-layer');
+        const floorMarkings = document.getElementById('floor-markings');
         const ambienceOverlay = document.getElementById('ambience-overlay');
         
-        // State
+        // Globals
         let customers = [];
         let scenario = 'MIXED'; 
         let isDragging = false;
         let startX, scrollLeft;
         let autoMode = true;
         let totalSales = 124;
+        let lane4Open = false;
+        
+        // Queues: { x, y, users: [] } for each lane
+        const lanes = [];
 
-        // === 1. DRAG TO SCROLL LOGIC ===
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            container.classList.add('cursor-grabbing');
-            container.classList.remove('cursor-grab');
-            startX = e.pageX - container.offsetLeft;
-            scrollLeft = container.scrollLeft;
-        });
-
-        container.addEventListener('mouseleave', () => { isDragging = false; container.classList.remove('cursor-grabbing'); container.classList.add('cursor-grab'); });
-        container.addEventListener('mouseup', () => { isDragging = false; container.classList.remove('cursor-grabbing'); container.classList.add('cursor-grab'); });
-
+        // === 1. DRAG LOGIC ===
+        container.addEventListener('mousedown', (e) => { isDragging=true; container.classList.add('cursor-grabbing'); startX=e.pageX-container.offsetLeft; scrollLeft=container.scrollLeft; });
+        container.addEventListener('mouseleave', () => { isDragging=false; container.classList.remove('cursor-grabbing'); });
+        container.addEventListener('mouseup', () => { isDragging=false; container.classList.remove('cursor-grabbing'); });
         container.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+            if(!isDragging) return;
             e.preventDefault();
             const x = e.pageX - container.offsetLeft;
-            const walk = (x - startX) * 2; // Scroll speed multiplier
+            const walk = (x - startX) * 2;
             container.scrollLeft = scrollLeft - walk;
         });
 
-        // === 2. MAP GENERATION ===
+        // === 2. MAP & COLLISION DATA ===
+        // Note: Removed 'Checkout' shelf to prevent collision issues
         const shelvesData = [
-            { cat: 'New Arrivals', x: 100, y: 100, w: 200, h: 40, c: 'border-pink-500' },
-            { cat: 'Best Sellers', x: 100, y: 300, w: 200, h: 40, c: 'border-pink-500' },
-            { cat: 'Cold Drinks', x: 400, y: 50, w: 40, h: 300, c: 'border-cyan-500' },
-            { cat: 'Snacks', x: 600, y: 150, w: 300, h: 60, c: 'border-orange-500' },
-            { cat: 'Gadgets', x: 1000, y: 100, w: 100, h: 200, c: 'border-purple-500' },
-            { cat: 'Smart Home', x: 1200, y: 100, w: 100, h: 200, c: 'border-purple-500' },
-            { cat: 'Fashion', x: 1000, y: 400, w: 300, h: 80, c: 'border-teal-500' },
-            { cat: 'Toys Zone', x: 1500, y: 100, w: 200, h: 200, c: 'border-yellow-500' },
-            { cat: 'Checkout', x: 2100, y: 50, w: 150, h: 400, c: 'border-green-500' }
+            { id: 'new', cat: 'New Arrivals', x: 100, y: 100, w: 200, h: 40, c: 'border-pink-500' },
+            { id: 'best', cat: 'Best Sellers', x: 100, y: 300, w: 200, h: 40, c: 'border-pink-500' },
+            { id: 'drinks', cat: 'Drinks', x: 450, y: 50, w: 60, h: 300, c: 'border-cyan-500' },
+            { id: 'snacks', cat: 'Snacks', x: 650, y: 150, w: 300, h: 60, c: 'border-orange-500' },
+            { id: 'gadgets', cat: 'Gadgets', x: 1100, y: 100, w: 100, h: 200, c: 'border-purple-500' },
+            { id: 'home', cat: 'Home', x: 1300, y: 100, w: 100, h: 200, c: 'border-purple-500' },
+            { id: 'fashion', cat: 'Fashion', x: 1100, y: 400, w: 300, h: 80, c: 'border-teal-500' },
+            { id: 'toys', cat: 'Toys', x: 1600, y: 100, w: 200, h: 200, c: 'border-yellow-500' }
         ];
 
-        function renderMap() {
+        // Init Shelves
+        function initMap() {
             shelvesData.forEach(s => {
                 const el = document.createElement('div');
-                el.className = `absolute border-2 ${s.c} bg-slate-800/50 flex items-center justify-center text-xs text-slate-300 font-bold rounded`;
+                el.className = `absolute border-2 ${s.c} bg-slate-800/80 flex items-center justify-center text-xs text-slate-300 font-bold rounded shadow-lg`;
                 el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
                 el.style.width = s.w + 'px'; el.style.height = s.h + 'px';
                 el.innerText = s.cat;
+                el.id = `shelf-${s.id}`;
                 shelfLayer.appendChild(el);
             });
+
+            // Init Lanes (Positioned Explicitly)
+            const laneStartX = 2100;
+            const laneStartY = 80;
+            const laneGap = 120;
+
+            for(let i=0; i<4; i++) {
+                const laneY = laneStartY + (i * laneGap);
+                
+                // 1. Visual Lane Box
+                const el = document.createElement('div');
+                el.className = `absolute w-32 h-24 border-2 rounded-l-lg border-r-0 flex flex-col items-center justify-center bg-slate-900 lane-box`;
+                el.style.left = laneStartX + 'px'; 
+                el.style.top = laneY + 'px';
+                el.id = `lane-${i}`;
+                
+                const title = document.createElement('span');
+                title.className = "text-xs font-bold text-slate-300";
+                title.innerText = `LANE ${i+1}`;
+                el.appendChild(title);
+                
+                const status = document.createElement('span');
+                status.className = "text-[9px] mono mt-1 px-2 py-0.5 rounded bg-black/50";
+                status.innerText = i===3 ? "CLOSED" : "OPEN";
+                status.id = `lane-status-${i}`;
+                el.appendChild(status);
+
+                // 2. Queue Line Visual on Floor
+                const line = document.createElement('div');
+                line.className = "absolute h-px bg-slate-600 w-48 queue-line";
+                line.style.left = (laneStartX - 190) + 'px';
+                line.style.top = (laneY + 48) + 'px'; // Center of lane height
+                floorMarkings.appendChild(line);
+
+                // 3. Logic Data
+                lanes.push({
+                    id: i,
+                    entryX: laneStartX - 20, // Point where they enter the box
+                    y: laneY + 12, // Center Y inside box (approx)
+                    open: i < 3,
+                    queue: []
+                });
+
+                if(i===3) {
+                    el.classList.add('border-red-500', 'lane-closed');
+                    el.classList.remove('border-green-500');
+                } else {
+                    el.classList.add('border-green-500', 'lane-open');
+                }
+
+                checkoutLayer.appendChild(el);
+            }
         }
 
-        // === 3. CUSTOMER LOGIC ===
+        // === 3. PHYSICS & QUEUE LOGIC ===
+
+        function checkCollision(x, y, r) {
+            // Check world bounds
+            if (x < 0 || x > 2380 || y < 10 || y > 590) return true;
+            
+            // Check shelves (Simple AABB)
+            for (let s of shelvesData) {
+                if (x + r > s.x && x - r < s.x + s.w && y + r > s.y && y - r < s.y + s.h) {
+                    // Trigger visual pop effect on shelf
+                    const el = document.getElementById(`shelf-${s.id}`);
+                    if(el && Math.random() < 0.05) {
+                        el.classList.remove('shelf-interact');
+                        void el.offsetWidth; // trigger reflow
+                        el.classList.add('shelf-interact');
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
         class Customer {
             constructor() {
                 this.id = Math.floor(Math.random()*9000)+1000;
-                this.x = 10; this.y = Math.random()*(container.clientHeight-100)+50;
-                this.vx = 1.5; this.vy = (Math.random()-0.5)*2;
-                this.frames = 0;
-                this.finished = false;
+                // Try spawn not in obstacle
+                let safe = false;
+                while(!safe) {
+                    this.x = 10; 
+                    this.y = Math.random()*(container.clientHeight-100)+50;
+                    if(!checkCollision(this.x, this.y, 5)) safe = true;
+                }
                 
-                // Determine Type
+                this.vx = 1.5; this.vy = (Math.random()-0.5)*2;
+                this.radius = 6;
+                this.state = 'SHOPPING'; // SHOPPING, SEEKING_QUEUE, QUEUING
+                this.targetLane = -1;
+                
+                // Type logic
                 let rand = Math.random();
                 if (scenario === 'RUSH') this.type = 'RUSH';
                 else if (scenario === 'HESITANT') this.type = 'HESITANT';
                 else this.type = rand < 0.2 ? 'RUSH' : (rand > 0.8 ? 'HESITANT' : 'NORMAL');
+                
+                this.applyTraits();
 
-                this.applyTypeTraits();
-
-                // DOM
                 this.el = document.createElement('div');
-                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot border border-white/20 shadow-sm pointer-events-auto'; // Enable pointer events for dot
+                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot border border-white/20 shadow-sm pointer-events-auto';
                 this.el.style.backgroundColor = this.color;
                 customerLayer.appendChild(this.el);
             }
 
-            applyTypeTraits() {
-                if (this.type === 'RUSH') {
-                    this.vx = 4; this.color = '#ef4444'; 
-                } else if (this.type === 'HESITANT') {
-                    this.vx = 0.8; this.color = '#eab308';
-                } else {
-                    this.vx = 1.5; this.color = '#10b981';
-                }
-            }
-
-            convert(newType) {
-                this.type = newType;
-                this.applyTypeTraits();
-                
-                // Visual effect for conversion
-                const ping = document.createElement('div');
-                ping.className = 'absolute w-4 h-4 rounded-full border-2 border-white animate-ping';
-                ping.style.left = this.x + 'px'; ping.style.top = this.y + 'px';
-                customerLayer.appendChild(ping);
-                setTimeout(()=>ping.remove(), 500);
+            applyTraits() {
+                if(this.type === 'RUSH') { this.maxSpeed = 3.5; this.color = '#ef4444'; }
+                else if(this.type === 'HESITANT') { this.maxSpeed = 0.8; this.color = '#eab308'; }
+                else { this.maxSpeed = 1.5; this.color = '#10b981'; }
             }
 
             update() {
-                this.frames++;
-                this.x += this.vx; this.y += this.vy;
-
-                // Hesitant Stop Logic
-                if (this.type === 'HESITANT' && Math.random() < 0.02) {
-                    this.vx = 0; this.vy = 0;
-                    setTimeout(() => { if(!this.finished) this.vx = 0.5; }, 1500);
+                if(this.state === 'SHOPPING') {
+                    this.moveShopping();
+                    // If far right, start looking for queue
+                    if(this.x > 1800 && Math.random() < 0.02) this.findQueue();
+                } 
+                else if (this.state === 'SEEKING_QUEUE') {
+                    this.moveTowardsQueue();
+                }
+                else if (this.state === 'QUEUING') {
+                    this.moveInQueue();
                 }
 
-                // Bounce Y
-                if (this.y < 10 || this.y > container.clientHeight-20) this.vy *= -1;
-                
-                // Keep moving right
-                if (this.vx < 0.5 && this.type !== 'HESITANT') this.vx += 0.1;
-
-                // Checkout
-                if (this.x > 2200) {
-                    this.finished = true;
-                    this.el.remove();
-                    if(Math.random() > 0.3) { // 70% chance buy
-                        totalSales++;
-                        addLog(`Customer #${this.id} bought items.`, 'text-green-400');
-                    }
-                }
-
+                // Render
                 this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
                 this.el.style.backgroundColor = this.color;
             }
-        }
 
-        // === 4. AMBIENCE & CONTROLS ===
-        
-        function toggleAutoMode() {
-            autoMode = document.getElementById('auto-toggle').checked;
-            const controls = ['light-slider', 'temp-slider', 'music-select'];
-            controls.forEach(id => document.getElementById(id).disabled = autoMode);
-            document.getElementById('auto-label').className = autoMode ? "mr-2 text-[9px] text-green-400 font-bold" : "mr-2 text-[9px] text-slate-500";
-            
-            if(autoMode) updateAmbienceAuto();
-            else addLog("Switched to MANUAL ambience control.", "text-slate-300");
-        }
+            moveShopping() {
+                // Next pos
+                let nx = this.x + this.vx;
+                let ny = this.y + this.vy;
 
-        function updateAmbienceAuto() {
-            // Determine Mood based on majority customer type
-            let rushCount = customers.filter(c => c.type === 'RUSH').length;
-            let hesiCount = customers.filter(c => c.type === 'HESITANT').length;
-            let mood = 'NORMAL';
+                // Collision Check
+                if (checkCollision(nx, ny, this.radius)) {
+                    // Bounce
+                    this.vx *= -1; 
+                    this.vy *= -1;
+                    // Slightly nudge to avoid getting stuck
+                    this.x += this.vx; 
+                    this.y += this.vy;
+                } else {
+                    this.x = nx;
+                    this.y = ny;
+                }
 
-            if (rushCount > customers.length * 0.4) mood = 'RUSH';
-            else if (hesiCount > customers.length * 0.4) mood = 'HESITANT';
+                // Random steer
+                if(Math.random()<0.05) this.vy += (Math.random()-0.5);
+                
+                // Flow right
+                if(this.vx < 0.5 && this.type!=='HESITANT') this.vx += 0.1;
 
-            // Apply Settings
-            const lightSlider = document.getElementById('light-slider');
-            const tempSlider = document.getElementById('temp-slider');
-            const musicSelect = document.getElementById('music-select');
-            const musicVal = document.getElementById('music-val');
+                // Clamp speed
+                const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+                if(speed > this.maxSpeed) {
+                    this.vx = (this.vx/speed)*this.maxSpeed;
+                    this.vy = (this.vy/speed)*this.maxSpeed;
+                }
+            }
 
-            if (mood === 'RUSH') {
-                // Cool down, Dim lights, Fast music
-                setAmbienceVisuals(20, 'cool'); 
-                lightSlider.value = 30; tempSlider.value = 18; musicSelect.value = 'EDM';
-                musicVal.innerText = "♪ Upbeat EDM";
-            } else if (mood === 'HESITANT') {
-                // Warm lights, Relax music
-                setAmbienceVisuals(80, 'warm');
-                lightSlider.value = 80; tempSlider.value = 25; musicSelect.value = 'JAZZ';
-                musicVal.innerText = "♪ Slow Jazz";
-            } else {
-                setAmbienceVisuals(50, 'normal');
-                lightSlider.value = 50; tempSlider.value = 24; musicSelect.value = 'POP';
-                musicVal.innerText = "♪ Pop Hits";
+            findQueue() {
+                // Find best lane (shortest queue that is OPEN)
+                let bestLane = -1;
+                let minLen = 999;
+                
+                lanes.forEach(l => {
+                    if(l.open && l.queue.length < minLen) {
+                        minLen = l.queue.length;
+                        bestLane = l.id;
+                    }
+                });
+
+                if(bestLane !== -1) {
+                    this.state = 'SEEKING_QUEUE';
+                    this.targetLane = bestLane;
+                    lanes[bestLane].queue.push(this);
+                }
+            }
+
+            moveTowardsQueue() {
+                const lane = lanes[this.targetLane];
+                // Target: The end of the queue line
+                // The queue grows to the left from the entry point
+                const index = lane.queue.indexOf(this);
+                const tx = lane.entryX - (index * 25) - 40; // Spacing 25px
+                const ty = lane.y + 40; // Offset +40 because visual lane box height
+
+                const dx = tx - this.x;
+                const dy = ty - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if(dist > 5) {
+                    // Move towards target
+                    this.x += (dx/dist) * (this.maxSpeed + 1); // Move slightly faster to queue
+                    this.y += (dy/dist) * (this.maxSpeed + 1);
+                } else {
+                    this.state = 'QUEUING';
+                }
+            }
+
+            moveInQueue() {
+                const lane = lanes[this.targetLane];
+                const index = lane.queue.indexOf(this);
+                
+                // Target position in line relative to Lane Entry
+                // Using Lane Entry X (approx 2080)
+                const tx = lane.entryX - (index * 25); 
+                const ty = lane.y + 40; // Align vertically center
+
+                // Move towards target
+                const dx = tx - this.x;
+                const dy = ty - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                // Small adjustment to keep line straight
+                if(dist > 2) {
+                    this.x += (dx/dist) * 2;
+                    this.y += (dy/dist) * 2;
+                } else {
+                    // At position
+                    if(index === 0) {
+                        // At counter, processing...
+                        if(Math.random() < 0.03) { // Finished processing
+                            this.checkout();
+                        }
+                    }
+                }
+            }
+
+            checkout() {
+                // Remove from queue
+                const lane = lanes[this.targetLane];
+                const idx = lane.queue.indexOf(this);
+                if(idx > -1) lane.queue.splice(idx, 1);
+                
+                // Visual cleanup
+                this.el.remove();
+                
+                // Log logic (Throttled)
+                totalSales++;
+                if(Math.random() > 0.5) addLog(`Sale ID ${this.id} at Lane ${this.targetLane+1}`, 'text-green-400');
+                
+                // Remove from global list
+                const globalIdx = customers.indexOf(this);
+                if(globalIdx > -1) customers.splice(globalIdx, 1);
             }
         }
 
-        function setAmbienceVisuals(brightness, tone) {
-            // Visualize Lighting/Temp via Overlay
-            let color = '';
-            if (tone === 'cool') color = `rgba(0, 50, 255, 0.1)`; // Blue tint
-            else if (tone === 'warm') color = `rgba(255, 150, 0, 0.05)`; // Orange tint
-            else color = `transparent`;
+        // === 4. CONTROL LOGIC ===
+        
+        function updateLaneLogic() {
+            // Auto open Lane 4 if congested or Rush mode
+            let totalQueue = lanes[0].queue.length + lanes[1].queue.length + lanes[2].queue.length;
             
-            ambienceOverlay.style.backgroundColor = color;
-            // You could also change floor-grid brightness here
-            world.style.filter = `brightness(${0.7 + (brightness/200)})`; 
+            if (scenario === 'RUSH' || totalQueue > 12) {
+                if(!lane4Open) {
+                    lane4Open = true;
+                    lanes[3].open = true;
+                    const el = document.getElementById('lane-3');
+                    el.classList.remove('lane-closed', 'border-red-500');
+                    el.classList.add('lane-open', 'border-green-500');
+                    document.getElementById('lane-status-3').innerText = "AUTO OPEN";
+                    document.getElementById('lane4-status-text').innerText = "● OPEN (AUTO)";
+                    document.getElementById('lane4-status-text').className = "text-green-500 animate-pulse";
+                    addLog("High traffic. Lane 4 Opened.", "text-cyan-400 font-bold");
+                }
+            } else {
+                if(lane4Open && lanes[3].queue.length === 0 && scenario !== 'RUSH') { 
+                    lane4Open = false;
+                    lanes[3].open = false;
+                    const el = document.getElementById('lane-3');
+                    el.classList.add('lane-closed', 'border-red-500');
+                    el.classList.remove('lane-open', 'border-green-500');
+                    document.getElementById('lane-status-3').innerText = "CLOSED";
+                    document.getElementById('lane4-status-text').innerText = "● CLOSED";
+                    document.getElementById('lane4-status-text').className = "text-slate-500";
+                    addLog("Traffic normalized. Lane 4 Closed.", "text-slate-500");
+                }
+            }
         }
 
-        // Handle Manual Inputs
-        document.getElementById('light-slider').addEventListener('input', (e) => {
-            world.style.filter = `brightness(${0.5 + (e.target.value/100)})`;
-            document.getElementById('light-val').innerText = e.target.value + "%";
-        });
-        document.getElementById('temp-slider').addEventListener('input', (e) => {
-             document.getElementById('temp-val').innerText = e.target.value + "°C";
-             // Visual cue for temp
-             ambienceOverlay.style.backgroundColor = e.target.value < 22 ? `rgba(0, 50, 255, 0.1)` : `rgba(255, 100, 0, 0.05)`;
-        });
+        function setScenario(type) {
+            scenario = type;
+            addLog(`Simulation mode: ${type}`, 'text-white');
+        }
 
-        // === 5. SALES TRIGGERS ===
         function triggerPromo(type) {
-            let converted = 0;
+            let count = 0;
             customers.forEach(c => {
-                if (c.type === 'HESITANT') {
-                    c.convert('RUSH'); // Force buy!
-                    converted++;
+                if(c.type === 'HESITANT') {
+                    c.type = 'RUSH'; c.applyTraits(); count++;
                 }
             });
-
-            if (type === 'FLASH') {
-                addLog(`⚡ FLASH SALE ACTIVATED! ${converted} customers grabbed the deal!`, 'text-red-400 font-bold');
-                // Visual Flash Effect
-                const flash = document.createElement('div');
-                flash.className = 'fixed inset-0 bg-white/30 z-50 pointer-events-none transition-opacity duration-500';
-                document.body.appendChild(flash);
-                setTimeout(() => flash.classList.add('opacity-0'), 50);
-                setTimeout(() => flash.remove(), 500);
-            } else {
-                addLog(`🏷️ Coupons sent. ${converted} customers decided to buy.`, 'text-cyan-400');
-            }
+            addLog(`${type} Triggered. ${count} converted.`, 'text-yellow-400');
         }
 
-        // === 6. LOGS & SCENARIO ===
-        function toggleLogs() {
-            const panel = document.getElementById('logs-panel');
-            const arrow = document.getElementById('log-arrow');
-            if (panel.style.height === '40px') {
-                panel.style.height = 'auto'; // Expand (flex-1 handles it actually, so we toggle classes)
-                panel.classList.remove('h-10');
-                panel.classList.add('flex-1');
-                arrow.style.transform = 'rotate(0deg)';
-            } else {
-                panel.classList.remove('flex-1');
-                panel.classList.add('h-10');
-                arrow.style.transform = 'rotate(-90deg)';
-            }
+        function toggleAutoMode() {
+            autoMode = document.getElementById('auto-toggle').checked;
+            document.getElementById('manual-controls').style.opacity = autoMode ? '0.3' : '1';
         }
 
+        // Throttled Log
+        let lastLogTime = 0;
         function addLog(msg, color='text-slate-400') {
+            const now = Date.now();
+            // Allow critical logs (bold ones) always, throttle others
+            if (!color.includes('font-bold') && now - lastLogTime < 800) return; 
+            
+            lastLogTime = now;
             const div = document.createElement('div');
             const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
             div.innerHTML = `<span class="opacity-50 text-[9px] mr-1">${time}</span> <span class="${color}">${msg}</span>`;
             document.getElementById('logs').prepend(div);
         }
 
-        function setScenario(type) {
-            scenario = type;
-            addLog(`Simulation switched to ${type} mode.`);
+        function toggleLogs() {
+            const panel = document.getElementById('logs-panel');
+            if(panel.classList.contains('h-10')) {
+                panel.classList.remove('h-10');
+                document.getElementById('log-arrow').style.transform = 'rotate(0deg)';
+            } else {
+                panel.classList.add('h-10');
+                document.getElementById('log-arrow').style.transform = 'rotate(-90deg)';
+            }
         }
 
         // === INIT ===
-        renderMap();
-        
-        // Game Loop
+        initMap();
+
+        // Loop
         setInterval(() => {
-            if (customers.length < 50) customers.push(new Customer());
-        }, 800);
+            if(customers.length < 60) customers.push(new Customer());
+        }, 600);
 
         setInterval(() => {
-            customers = customers.filter(c => !c.finished);
+            updateLaneLogic();
+            
+            // Update Stats
             document.getElementById('stat-count').innerText = customers.length;
             document.getElementById('stat-sales').innerText = totalSales;
             
-            // Calc Mood for Stats HUD
             let hesi = customers.filter(c => c.type === 'HESITANT').length;
-            let percent = customers.length ? Math.floor((hesi/customers.length)*100) : 0;
-            document.getElementById('stat-hesi').innerText = percent + "%";
-            
-            // Auto Ambience Loop
-            if(autoMode) updateAmbienceAuto();
+            let pct = customers.length ? Math.floor((hesi/customers.length)*100) : 0;
+            document.getElementById('stat-hesi').innerText = pct + "%";
 
+            // Ambience Overlay
+            if(autoMode) {
+                if(scenario === 'RUSH') ambienceOverlay.style.backgroundColor = 'rgba(0,0,255,0.05)';
+                else if(scenario === 'HESITANT') ambienceOverlay.style.backgroundColor = 'rgba(255,100,0,0.05)';
+                else ambienceOverlay.style.backgroundColor = 'transparent';
+            }
         }, 500);
 
         function animate() {
