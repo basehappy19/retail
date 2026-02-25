@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuro-Retail OS v4.0 | Real-World Scale</title>
+    <title>Neuro-Retail OS v5.0 | Ultimate Control</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; }
+        body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; user-select: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
         /* Grid พื้นหลัง */
@@ -20,408 +20,417 @@
                 linear-gradient(90deg, rgba(30, 41, 59, 0.3) 1px, transparent 1px);
             background-size: 40px 40px;
             background-color: #0b1120;
+            transition: filter 0.5s ease; /* For lighting effect */
         }
+
+        /* Drag Cursor Logic */
+        .grab-cursor { cursor: grab; }
+        .grabbing-cursor { cursor: grabbing; }
 
         /* Customer Dot */
         .customer-dot { transition: transform 0.2s, background-color 0.5s; cursor: pointer; z-index: 20; }
         .customer-dot:hover { transform: scale(1.8); box-shadow: 0 0 15px white; z-index: 50; }
 
-        /* CCTV Animation */
-        .cctv-cone {
-            position: absolute; bottom: -60px; left: -20px;
-            width: 80px; height: 60px;
-            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.1), transparent);
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            transform-origin: top center;
-            animation: scan 4s infinite ease-in-out alternate;
+        /* Store Ambience Overlay (For Lighting/Temp) */
+        #ambience-overlay {
             pointer-events: none;
+            mix-blend-mode: overlay;
+            transition: background-color 1s ease;
         }
-        @keyframes scan { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 
-        /* Shelf Style */
-        .shelf-box {
-            background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #334155 10px, #334155 20px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-        }
-        .shelf-active { border-color: #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        /* Scrollbar Hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="flex h-screen w-screen p-2 gap-2 text-sm">
+<body class="flex h-screen w-screen p-2 gap-2 text-xs">
 
-    <aside class="w-72 bg-slate-900 rounded-lg flex flex-col border border-slate-700 shadow-xl z-30">
-        <div class="p-4 border-b border-slate-700 bg-slate-950/50">
-            <h1 class="text-xl font-bold text-cyan-400 tracking-wider"><i class="fa-solid fa-eye"></i> OMNI-RETAIL</h1>
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Store Intelligence System v4.0</p>
+    <aside class="w-64 bg-slate-900 rounded-lg flex flex-col border border-slate-700 shadow-xl z-30">
+        <div class="p-3 border-b border-slate-700 bg-slate-950/50">
+            <h1 class="text-lg font-bold text-cyan-400 tracking-wider"><i class="fa-solid fa-eye"></i> OMNI-RETAIL</h1>
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest">Store Intelligence System v5.0</p>
         </div>
 
-        <div class="p-4 flex-1 overflow-y-auto">
-            <div class="mb-6">
-                <h2 class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-gamepad"></i> Simulation Scenarios
+        <div class="p-3 flex-1 overflow-y-auto space-y-4">
+            <div>
+                <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Simulation Mode
                 </h2>
-                <div class="space-y-2">
-                    <button onclick="setScenario('MIXED')" class="w-full text-left px-3 py-3 rounded bg-gradient-to-r from-indigo-900 to-slate-800 hover:from-indigo-800 border border-indigo-500/50 transition flex items-center gap-3 group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-indigo-500/10 group-hover:bg-indigo-500/20 transition"></div>
-                        <div class="w-3 h-3 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div> 
-                        <span class="font-bold text-white relative z-10">REAL LIFE (MIXED)</span>
-                        <span class="text-[9px] text-indigo-300 ml-auto opacity-70">RECOMMENDED</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setScenario('MIXED')" class="col-span-2 py-2 rounded bg-indigo-900/50 hover:bg-indigo-800 border border-indigo-500/50 transition flex items-center justify-center gap-2 text-indigo-200">
+                        <i class="fa-solid fa-shuffle"></i> Mixed (Real Life)
                     </button>
-
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        <button onclick="setScenario('NORMAL')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div> Normal
-                        </button>
-                        <button onclick="setScenario('RUSH')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-red-500"></div> Rush Hour
-                        </button>
-                        <button onclick="setScenario('HESITANT')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div> Hesitant
-                        </button>
-                    </div>
+                    <button onclick="setScenario('RUSH')" class="py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center gap-1">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div> Rush
+                    </button>
+                    <button onclick="setScenario('HESITANT')" class="py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center gap-1">
+                        <div class="w-2 h-2 rounded-full bg-yellow-500"></div> Hesitant
+                    </button>
                 </div>
             </div>
 
-            <div class="mb-6">
-                <h2 class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-video"></i> Camera Status
+            <div class="p-2 bg-slate-800/50 rounded border border-slate-700">
+                <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn"></i> Sales Triggers
                 </h2>
-                <div class="space-y-2 bg-slate-950 p-3 rounded border border-slate-800">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">CAM-01 (Entrance)</span>
-                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> REC</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">CAM-02 (Aisle L)</span>
-                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> LIVE</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">CAM-03 (Aisle R)</span>
-                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> LIVE</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">CAM-04 (Checkout)</span>
-                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> REC</span>
-                    </div>
+                <p class="text-[9px] text-slate-500 mb-2">Manual override to convert hesitant customers.</p>
+                <div class="space-y-2">
+                    <button onclick="triggerPromo('FLASH')" class="w-full py-2 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded text-white font-bold shadow-lg transform active:scale-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> FLASH SALE (30s)
+                    </button>
+                    <button onclick="triggerPromo('DISCOUNT')" class="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded border border-slate-500 text-slate-200 font-bold transform active:scale-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-tag"></i> Send 15% Coupon
+                    </button>
                 </div>
             </div>
 
-            <div class="p-3 bg-slate-800/50 rounded border border-slate-700/50 text-[10px] space-y-1">
-                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> <span>Normal Shopper</span></div>
-                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div> <span>Rushing (High Speed)</span></div>
-                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-yellow-500"></div> <span>Hesitant (Needs Help)</span></div>
+            <div>
+                <h2 class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Camera Status</h2>
+                <div class="space-y-1 bg-slate-950 p-2 rounded border border-slate-800 text-[10px]">
+                    <div class="flex justify-between"><span class="text-slate-400">CAM-01 (Entrance)</span><span class="text-green-500">● REC</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">CAM-02 (Aisle)</span><span class="text-green-500">● LIVE</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">CAM-03 (Checkout)</span><span class="text-green-500">● REC</span></div>
+                </div>
             </div>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col gap-2 overflow-hidden relative">
         
-        <div class="grid grid-cols-4 gap-2 h-16 shrink-0 z-10">
-            <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Customers</span>
-                <div class="text-2xl font-bold text-white mono" id="stat-count">0</div>
+        <div class="grid grid-cols-4 gap-2 h-14 shrink-0 z-10">
+            <div class="bg-slate-800 rounded border border-slate-700 px-3 flex flex-col justify-center">
+                <span class="text-[9px] text-slate-400 uppercase">Customers</span>
+                <div class="text-xl font-bold text-white mono" id="stat-count">0</div>
             </div>
-            <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Avg. Time</span>
-                <div class="text-2xl font-bold text-cyan-400 mono" id="stat-time">0s</div>
+            <div class="bg-slate-800 rounded border border-slate-700 px-3 flex flex-col justify-center">
+                <span class="text-[9px] text-slate-400 uppercase">Sales Today</span>
+                <div class="text-xl font-bold text-green-400 mono" id="stat-sales">124</div>
             </div>
-             <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Hesitation Idx</span>
-                <div class="text-2xl font-bold text-yellow-400 mono" id="stat-hesi">0%</div>
+             <div class="bg-slate-800 rounded border border-slate-700 px-3 flex flex-col justify-center">
+                <span class="text-[9px] text-slate-400 uppercase">Hesitation Idx</span>
+                <div class="text-xl font-bold text-yellow-400 mono" id="stat-hesi">0%</div>
             </div>
-            <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded border border-slate-700 px-4 flex items-center justify-between">
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded border border-slate-700 px-3 flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] text-slate-400 uppercase block">Store Status</span>
-                    <div class="text-lg font-bold text-white" id="store-mood">NORMAL</div>
+                    <span class="text-[9px] text-slate-400 uppercase block">Store Mood</span>
+                    <div class="text-base font-bold text-white" id="store-mood">NORMAL</div>
                 </div>
-                <div class="text-3xl" id="mood-icon">🥗</div>
+                <div class="text-2xl" id="mood-icon">🥗</div>
             </div>
         </div>
 
-        <div class="flex-1 bg-slate-900 rounded border border-slate-700 relative overflow-auto shadow-inner group" id="scroll-container">
+        <div class="flex-1 bg-slate-900 rounded border border-slate-700 relative overflow-hidden shadow-inner group cursor-grab active:cursor-grabbing" id="map-container">
             
-            <div id="store-world" class="relative h-full w-[2400px] floor-grid">
+            <div id="store-world" class="relative h-full w-[2400px] floor-grid transition-transform duration-75 ease-out">
                 
-                <div class="absolute top-4 left-4 text-xs text-slate-500 bg-slate-900/80 px-2 py-1 rounded border border-slate-700 pointer-events-none z-50">
-                    <i class="fa-solid fa-arrows-left-right mr-1"></i> Scroll to explore the Mega Store
+                <div id="ambience-overlay" class="absolute inset-0 z-0 bg-transparent"></div>
+
+                <div class="absolute top-4 left-4 text-[10px] text-slate-500 bg-slate-900/80 px-2 py-1 rounded border border-slate-700 pointer-events-none z-50 select-none">
+                    <i class="fa-solid fa-hand"></i> Click & Drag to Pan
                 </div>
 
-                <div id="shelves-layer"></div>
-
-                <div class="absolute top-[10%] right-[2%] w-[12%] h-[80%] border-l-2 border-dashed border-slate-700 bg-slate-800/30 flex flex-col justify-center items-center gap-4">
-                    <div class="text-slate-500 text-xs -rotate-90 whitespace-nowrap font-bold mb-4">CHECKOUT ZONE</div>
-                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-green-500"><i class="fa-solid fa-cash-register text-green-400"></i></div>
-                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-slate-600 opacity-50"><i class="fa-solid fa-cash-register text-slate-500"></i></div>
-                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-slate-600 opacity-50"><i class="fa-solid fa-cash-register text-slate-500"></i></div>
-                </div>
-
-                <div id="cameras-layer"></div>
-
-                <div id="customer-layer" class="absolute inset-0 z-10"></div>
-
-                <div id="inspector" class="absolute hidden bg-slate-950/90 border border-cyan-500 text-xs p-3 rounded-lg w-48 shadow-2xl backdrop-blur z-50 pointer-events-none">
-                    <div class="font-bold text-cyan-400 mb-1 border-b border-slate-700 pb-1">CUSTOMER SCAN</div>
-                    <div class="grid grid-cols-2 gap-1 text-slate-300">
-                        <span>ID:</span> <span class="text-white mono" id="ins-id">---</span>
-                        <span>Mood:</span> <span class="font-bold" id="ins-mood">---</span>
-                        <span>Zone:</span> <span class="truncate" id="ins-zone">---</span>
-                        <span>Time:</span> <span class="mono" id="ins-time">---</span>
-                    </div>
-                </div>
-
-            </div>
+                <div id="shelves-layer" class="z-10 relative"></div>
+                <div id="customer-layer" class="absolute inset-0 z-20 pointer-events-none"></div> </div>
         </div>
 
     </main>
 
     <aside class="w-72 flex flex-col gap-2">
-        <div class="bg-gradient-to-b from-indigo-950 to-slate-900 p-4 rounded-lg border border-indigo-500/30 h-40 relative overflow-hidden">
-            <div class="flex items-center gap-2 mb-2">
-                <i class="fa-solid fa-robot text-indigo-400"></i>
-                <span class="text-[10px] font-bold text-indigo-300 uppercase">AI Recommendations</span>
+        
+        <div class="bg-gradient-to-b from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Store Ambience
+                </h2>
+                <label class="inline-flex items-center cursor-pointer">
+                    <span class="mr-2 text-[9px] text-slate-400" id="auto-label">AUTO</span>
+                    <input type="checkbox" checked id="auto-toggle" class="sr-only peer" onchange="toggleAutoMode()">
+                    <div class="relative w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
             </div>
-            <div id="ai-text" class="text-sm text-slate-200 leading-relaxed h-full overflow-y-auto pr-1">
-                System initializing retail environment map...
+
+            <div class="space-y-3" id="manual-controls">
+                <div>
+                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                        <span>Lighting</span>
+                        <span id="light-val">Warm</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="50" class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-yellow-400" id="light-slider" disabled>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                        <span>Temperature (AC)</span>
+                        <span id="temp-val">24°C</span>
+                    </div>
+                    <input type="range" min="18" max="28" value="24" class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-400" id="temp-slider" disabled>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                        <span>Background Music</span>
+                        <span id="music-val" class="text-cyan-400 animate-pulse">♪ Pop Hits</span>
+                    </div>
+                    <select id="music-select" class="w-full bg-slate-950 border border-slate-700 text-slate-300 text-[10px] rounded p-1" disabled>
+                        <option value="POP">Pop Hits (Normal)</option>
+                        <option value="JAZZ">Slow Jazz (Relax)</option>
+                        <option value="EDM">Upbeat EDM (Rush)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <div class="flex-1 bg-slate-900 rounded-lg border border-slate-700 flex flex-col">
-            <div class="p-2 bg-slate-800 border-b border-slate-700 text-[10px] font-bold text-slate-400 flex justify-between">
+        <div class="flex-1 bg-slate-900 rounded-lg border border-slate-700 flex flex-col overflow-hidden transition-all duration-300" id="logs-panel">
+            <div class="p-2 bg-slate-800 border-b border-slate-700 text-[10px] font-bold text-slate-400 flex justify-between items-center cursor-pointer hover:bg-slate-700 transition" onclick="toggleLogs()">
                 <span>BEHAVIOR LOGS</span>
-                <span class="text-green-500">● LIVE</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-green-500 text-[9px]">● LIVE</span>
+                    <i class="fa-solid fa-chevron-down transition-transform" id="log-arrow"></i>
+                </div>
             </div>
-            <div id="logs" class="flex-1 overflow-y-auto p-2 space-y-1.5 mono text-[10px]"></div>
+            <div id="logs" class="flex-1 overflow-y-auto p-2 space-y-1.5 mono text-[9px] h-full">
+                </div>
         </div>
     </aside>
 
     <script>
         // === CONFIGURATION ===
-        const WORLD_WIDTH = 2400;
-        const WORLD_HEIGHT = document.getElementById('scroll-container').clientHeight || 800;
+        const container = document.getElementById('map-container');
+        const world = document.getElementById('store-world');
         const customerLayer = document.getElementById('customer-layer');
         const shelfLayer = document.getElementById('shelves-layer');
-        const camLayer = document.getElementById('cameras-layer');
-        const inspector = document.getElementById('inspector');
+        const ambienceOverlay = document.getElementById('ambience-overlay');
         
+        // State
         let customers = [];
-        let scenario = 'MIXED'; // Default to Real Life
-        let timeElapsed = 0;
+        let scenario = 'MIXED'; 
+        let isDragging = false;
+        let startX, scrollLeft;
+        let autoMode = true;
+        let totalSales = 124;
 
-        // === DATA: SHELVES GENERATION ===
+        // === 1. DRAG TO SCROLL LOGIC ===
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            container.classList.add('cursor-grabbing');
+            container.classList.remove('cursor-grab');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+        });
+
+        container.addEventListener('mouseleave', () => { isDragging = false; container.classList.remove('cursor-grabbing'); container.classList.add('cursor-grab'); });
+        container.addEventListener('mouseup', () => { isDragging = false; container.classList.remove('cursor-grabbing'); container.classList.add('cursor-grab'); });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * 2; // Scroll speed multiplier
+            container.scrollLeft = scrollLeft - walk;
+        });
+
+        // === 2. MAP GENERATION ===
         const shelvesData = [
-            { id: 'S1', cat: 'New Arrivals', x: 100, y: 100, w: 200, h: 40, color: 'border-pink-500' },
-            { id: 'S2', cat: 'Promotions', x: 100, y: 300, w: 200, h: 40, color: 'border-pink-500' },
-            
-            { id: 'D1', cat: 'Drinks (Cold)', x: 400, y: 50, w: 40, h: 300, color: 'border-cyan-500' },
-            { id: 'D2', cat: 'Drinks (Hot)', x: 500, y: 50, w: 40, h: 300, color: 'border-cyan-500' },
-            
-            { id: 'F1', cat: 'Snacks', x: 700, y: 150, w: 300, h: 60, color: 'border-orange-500' },
-            { id: 'F2', cat: 'Instant Food', x: 700, y: 350, w: 300, h: 60, color: 'border-orange-500' },
-            
-            { id: 'G1', cat: 'Gadgets', x: 1100, y: 100, w: 100, h: 200, color: 'border-purple-500' },
-            { id: 'G2', cat: 'Accessories', x: 1300, y: 100, w: 100, h: 200, color: 'border-purple-500' },
-            
-            { id: 'H1', cat: 'Home Decor', x: 1100, y: 400, w: 300, h: 80, color: 'border-teal-500' },
-            
-            { id: 'T1', cat: 'Toys', x: 1600, y: 100, w: 200, h: 200, color: 'border-yellow-500' } // Big square island
+            { cat: 'New Arrivals', x: 100, y: 100, w: 200, h: 40, c: 'border-pink-500' },
+            { cat: 'Best Sellers', x: 100, y: 300, w: 200, h: 40, c: 'border-pink-500' },
+            { cat: 'Cold Drinks', x: 400, y: 50, w: 40, h: 300, c: 'border-cyan-500' },
+            { cat: 'Snacks', x: 600, y: 150, w: 300, h: 60, c: 'border-orange-500' },
+            { cat: 'Gadgets', x: 1000, y: 100, w: 100, h: 200, c: 'border-purple-500' },
+            { cat: 'Smart Home', x: 1200, y: 100, w: 100, h: 200, c: 'border-purple-500' },
+            { cat: 'Fashion', x: 1000, y: 400, w: 300, h: 80, c: 'border-teal-500' },
+            { cat: 'Toys Zone', x: 1500, y: 100, w: 200, h: 200, c: 'border-yellow-500' },
+            { cat: 'Checkout', x: 2100, y: 50, w: 150, h: 400, c: 'border-green-500' }
         ];
 
-        // === DATA: CAMERAS ===
-        const camerasData = [
-            { x: 20, y: 20, rot: 45 },
-            { x: 600, y: 20, rot: 0 },
-            { x: 1200, y: 20, rot: 0 },
-            { x: 1800, y: 20, rot: -45 },
-            { x: 2300, y: 300, rot: -90 } // Checkout Cam
-        ];
-
-        // === SETUP FUNCTIONS ===
-        
         function renderMap() {
-            // 1. Render Shelves
             shelvesData.forEach(s => {
                 const el = document.createElement('div');
-                el.className = `absolute shelf-box border-2 ${s.color} rounded flex items-center justify-center text-xs font-bold text-slate-300 text-center opacity-80`;
-                el.style.left = s.x + 'px';
-                el.style.top = s.y + 'px';
-                el.style.width = s.w + 'px';
-                el.style.height = s.h + 'px';
-                el.id = `shelf-${s.id}`;
-                el.innerHTML = `<span class="bg-slate-900/80 px-1 rounded">${s.cat}</span>`;
+                el.className = `absolute border-2 ${s.c} bg-slate-800/50 flex items-center justify-center text-xs text-slate-300 font-bold rounded`;
+                el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+                el.style.width = s.w + 'px'; el.style.height = s.h + 'px';
+                el.innerText = s.cat;
                 shelfLayer.appendChild(el);
-            });
-
-            // 2. Render Cameras
-            camerasData.forEach((c, idx) => {
-                const el = document.createElement('div');
-                el.className = 'absolute w-8 h-8 z-20';
-                el.style.left = c.x + 'px';
-                el.style.top = c.y + 'px';
-                el.innerHTML = `
-                    <div class="relative">
-                        <i class="fa-solid fa-video text-slate-400 text-xl drop-shadow-lg" style="transform: rotate(${c.rot}deg)"></i>
-                        <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_lime]"></div>
-                        <div class="cctv-cone" style="transform: rotate(${c.rot}deg) translateX(-50%)"></div>
-                    </div>
-                `;
-                camLayer.appendChild(el);
             });
         }
 
-        // === CUSTOMER LOGIC ===
-
+        // === 3. CUSTOMER LOGIC ===
         class Customer {
             constructor() {
-                this.id = Math.floor(Math.random() * 90000) + 10000;
-                this.x = 10; // Start at left entrance
-                this.y = Math.random() * (WORLD_HEIGHT - 100) + 50;
-                this.vx = (Math.random() * 2) + 0.5; // Always move right initially
-                this.vy = (Math.random() - 0.5) * 2;
-                
-                this.width = 12; 
-                this.height = 12;
+                this.id = Math.floor(Math.random()*9000)+1000;
+                this.x = 10; this.y = Math.random()*(container.clientHeight-100)+50;
+                this.vx = 1.5; this.vy = (Math.random()-0.5)*2;
                 this.frames = 0;
                 this.finished = false;
                 
-                // Personality (The Core of "Mixed Mode")
-                const rand = Math.random();
+                // Determine Type
+                let rand = Math.random();
                 if (scenario === 'RUSH') this.type = 'RUSH';
                 else if (scenario === 'HESITANT') this.type = 'HESITANT';
-                else if (scenario === 'NORMAL') this.type = 'NORMAL';
-                else {
-                    // MIXED MODE
-                    if (rand < 0.2) this.type = 'RUSH';
-                    else if (rand > 0.8) this.type = 'HESITANT';
-                    else this.type = 'NORMAL';
-                }
+                else this.type = rand < 0.2 ? 'RUSH' : (rand > 0.8 ? 'HESITANT' : 'NORMAL');
 
-                // Apply Stats based on Type
-                if (this.type === 'RUSH') {
-                    this.vx = 4; // Fast
-                    this.color = '#ef4444';
-                    this.targetZone = 'Checkout';
-                } else if (this.type === 'HESITANT') {
-                    this.vx = 0.8;
-                    this.color = '#eab308';
-                    this.stopChance = 0.05; // Stops often
-                } else {
-                    this.vx = 1.5;
-                    this.color = '#10b981';
-                    this.stopChance = 0.01;
-                }
+                this.applyTypeTraits();
 
-                // Element
+                // DOM
                 this.el = document.createElement('div');
-                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot border border-white/20 shadow-sm';
+                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot border border-white/20 shadow-sm pointer-events-auto'; // Enable pointer events for dot
                 this.el.style.backgroundColor = this.color;
-                
-                // Hover/Inspect
-                this.el.addEventListener('mousemove', (e) => showInspector(e, this));
-                this.el.addEventListener('mouseleave', () => hideInspector());
-                
                 customerLayer.appendChild(this.el);
+            }
+
+            applyTypeTraits() {
+                if (this.type === 'RUSH') {
+                    this.vx = 4; this.color = '#ef4444'; 
+                } else if (this.type === 'HESITANT') {
+                    this.vx = 0.8; this.color = '#eab308';
+                } else {
+                    this.vx = 1.5; this.color = '#10b981';
+                }
+            }
+
+            convert(newType) {
+                this.type = newType;
+                this.applyTypeTraits();
+                
+                // Visual effect for conversion
+                const ping = document.createElement('div');
+                ping.className = 'absolute w-4 h-4 rounded-full border-2 border-white animate-ping';
+                ping.style.left = this.x + 'px'; ping.style.top = this.y + 'px';
+                customerLayer.appendChild(ping);
+                setTimeout(()=>ping.remove(), 500);
             }
 
             update() {
                 this.frames++;
+                this.x += this.vx; this.y += this.vy;
 
-                // Physics
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Random behavior
-                if (Math.random() < 0.02) this.vy += (Math.random() - 0.5) * 2; // Wander Y
-                if (Math.random() < 0.01) this.vx += (Math.random() - 0.5); // Wander X speed
-
-                // Hesitant Logic: Stop & Go
+                // Hesitant Stop Logic
                 if (this.type === 'HESITANT' && Math.random() < 0.02) {
-                    this.vx = 0; this.vy = 0; // Stop
-                    setTimeout(() => { 
-                        if(!this.finished) {
-                            this.vx = (Math.random() - 0.5); 
-                            this.vy = (Math.random() - 0.5); 
-                        }
-                    }, 2000); // Wait 2s
+                    this.vx = 0; this.vy = 0;
+                    setTimeout(() => { if(!this.finished) this.vx = 0.5; }, 1500);
                 }
 
-                // Boundaries
-                if (this.y < 10 || this.y > WORLD_HEIGHT - 30) this.vy *= -1;
+                // Bounce Y
+                if (this.y < 10 || this.y > container.clientHeight-20) this.vy *= -1;
                 
-                // Keep moving right mostly (Flow of store)
-                if (this.vx < 0.2 && this.type !== 'HESITANT') this.vx += 0.1;
+                // Keep moving right
+                if (this.vx < 0.5 && this.type !== 'HESITANT') this.vx += 0.1;
 
-                // Checkout Zone Reached (Far Right)
-                if (this.x > WORLD_WIDTH - 200) {
+                // Checkout
+                if (this.x > 2200) {
                     this.finished = true;
                     this.el.remove();
-                    addLog(`Customer #${this.id} checked out (${this.type})`, this.type === 'RUSH' ? 'text-red-400' : 'text-green-400');
-                }
-
-                // Render
-                this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
-            }
-
-            getCurrentZone() {
-                // Simple Hit Test with Shelves data
-                for (let s of shelvesData) {
-                    if (this.x >= s.x - 20 && this.x <= s.x + s.w + 20 &&
-                        this.y >= s.y - 20 && this.y <= s.y + s.h + 20) {
-                        return s.cat;
+                    if(Math.random() > 0.3) { // 70% chance buy
+                        totalSales++;
+                        addLog(`Customer #${this.id} bought items.`, 'text-green-400');
                     }
                 }
-                if (this.x > WORLD_WIDTH - 300) return 'Checkout Queue';
-                return 'Aisle / Walkway';
+
+                this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                this.el.style.backgroundColor = this.color;
             }
         }
 
-        // === SYSTEM CONTROLS ===
-
-        function showInspector(e, cust) {
-            inspector.classList.remove('hidden');
-            // Position near cursor but fixed relative to viewport
-            // We need to calculate position relative to the window, not the scroll map
-            const rect = e.target.getBoundingClientRect();
-            inspector.style.left = (rect.left + 20) + 'px';
-            inspector.style.top = (rect.top - 20) + 'px';
-
-            document.getElementById('ins-id').innerText = cust.id;
-            document.getElementById('ins-mood').innerText = cust.type;
-            document.getElementById('ins-mood').className = `font-bold ${cust.type==='RUSH'?'text-red-400':(cust.type==='HESITANT'?'text-yellow-400':'text-green-400')}`;
-            document.getElementById('ins-zone').innerText = cust.getCurrentZone();
-            document.getElementById('ins-time').innerText = Math.floor(cust.frames / 60) + 's';
+        // === 4. AMBIENCE & CONTROLS ===
+        
+        function toggleAutoMode() {
+            autoMode = document.getElementById('auto-toggle').checked;
+            const controls = ['light-slider', 'temp-slider', 'music-select'];
+            controls.forEach(id => document.getElementById(id).disabled = autoMode);
+            document.getElementById('auto-label').className = autoMode ? "mr-2 text-[9px] text-green-400 font-bold" : "mr-2 text-[9px] text-slate-500";
+            
+            if(autoMode) updateAmbienceAuto();
+            else addLog("Switched to MANUAL ambience control.", "text-slate-300");
         }
 
-        function hideInspector() {
-            inspector.classList.add('hidden');
-        }
+        function updateAmbienceAuto() {
+            // Determine Mood based on majority customer type
+            let rushCount = customers.filter(c => c.type === 'RUSH').length;
+            let hesiCount = customers.filter(c => c.type === 'HESITANT').length;
+            let mood = 'NORMAL';
 
-        function setScenario(type) {
-            scenario = type;
-            const mood = document.getElementById('store-mood');
-            const icon = document.getElementById('mood-icon');
-            const ai = document.getElementById('ai-text');
+            if (rushCount > customers.length * 0.4) mood = 'RUSH';
+            else if (hesiCount > customers.length * 0.4) mood = 'HESITANT';
 
-            if (type === 'MIXED') {
-                mood.innerText = 'REAL LIFE (MIXED)'; mood.className = "text-lg font-bold text-indigo-400"; icon.innerText = "🌍";
-                ai.innerHTML = "<b>Mode: Real World Simulation</b><br>Spawning customers with varied traits (Probability: 20% Rush, 20% Hesitant, 60% Normal). AI is monitoring all zones.";
-                addLog("Switched to MIXED REALITY mode.", "text-indigo-400");
-            } else if (type === 'RUSH') {
-                mood.innerText = 'RUSH HOUR'; mood.className = "text-lg font-bold text-red-400"; icon.innerText = "🔥";
-                ai.innerHTML = "<b>Mode: High Traffic</b><br>Detected crowd surge. Optimizing checkout lanes and reducing dwell time alerts.";
-                addLog("Switched to RUSH mode.", "text-red-400");
-            } else if (type === 'HESITANT') {
-                mood.innerText = 'LOW CONFIDENCE'; mood.className = "text-lg font-bold text-yellow-400"; icon.innerText = "🤔";
-                ai.innerHTML = "<b>Mode: Hesitation Analysis</b><br>Customers are browsing but not buying. Suggesting proactive assistance in Gadget & Toy zones.";
-                addLog("Switched to HESITANT mode.", "text-yellow-400");
+            // Apply Settings
+            const lightSlider = document.getElementById('light-slider');
+            const tempSlider = document.getElementById('temp-slider');
+            const musicSelect = document.getElementById('music-select');
+            const musicVal = document.getElementById('music-val');
+
+            if (mood === 'RUSH') {
+                // Cool down, Dim lights, Fast music
+                setAmbienceVisuals(20, 'cool'); 
+                lightSlider.value = 30; tempSlider.value = 18; musicSelect.value = 'EDM';
+                musicVal.innerText = "♪ Upbeat EDM";
+            } else if (mood === 'HESITANT') {
+                // Warm lights, Relax music
+                setAmbienceVisuals(80, 'warm');
+                lightSlider.value = 80; tempSlider.value = 25; musicSelect.value = 'JAZZ';
+                musicVal.innerText = "♪ Slow Jazz";
             } else {
-                mood.innerText = 'NORMAL'; mood.className = "text-lg font-bold text-green-400"; icon.innerText = "🥗";
-                ai.innerHTML = "<b>Mode: Standard</b><br>Store operations normal. Monitoring cameras for anomalies.";
-                addLog("Switched to NORMAL mode.", "text-green-400");
+                setAmbienceVisuals(50, 'normal');
+                lightSlider.value = 50; tempSlider.value = 24; musicSelect.value = 'POP';
+                musicVal.innerText = "♪ Pop Hits";
+            }
+        }
+
+        function setAmbienceVisuals(brightness, tone) {
+            // Visualize Lighting/Temp via Overlay
+            let color = '';
+            if (tone === 'cool') color = `rgba(0, 50, 255, 0.1)`; // Blue tint
+            else if (tone === 'warm') color = `rgba(255, 150, 0, 0.05)`; // Orange tint
+            else color = `transparent`;
+            
+            ambienceOverlay.style.backgroundColor = color;
+            // You could also change floor-grid brightness here
+            world.style.filter = `brightness(${0.7 + (brightness/200)})`; 
+        }
+
+        // Handle Manual Inputs
+        document.getElementById('light-slider').addEventListener('input', (e) => {
+            world.style.filter = `brightness(${0.5 + (e.target.value/100)})`;
+            document.getElementById('light-val').innerText = e.target.value + "%";
+        });
+        document.getElementById('temp-slider').addEventListener('input', (e) => {
+             document.getElementById('temp-val').innerText = e.target.value + "°C";
+             // Visual cue for temp
+             ambienceOverlay.style.backgroundColor = e.target.value < 22 ? `rgba(0, 50, 255, 0.1)` : `rgba(255, 100, 0, 0.05)`;
+        });
+
+        // === 5. SALES TRIGGERS ===
+        function triggerPromo(type) {
+            let converted = 0;
+            customers.forEach(c => {
+                if (c.type === 'HESITANT') {
+                    c.convert('RUSH'); // Force buy!
+                    converted++;
+                }
+            });
+
+            if (type === 'FLASH') {
+                addLog(`⚡ FLASH SALE ACTIVATED! ${converted} customers grabbed the deal!`, 'text-red-400 font-bold');
+                // Visual Flash Effect
+                const flash = document.createElement('div');
+                flash.className = 'fixed inset-0 bg-white/30 z-50 pointer-events-none transition-opacity duration-500';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.classList.add('opacity-0'), 50);
+                setTimeout(() => flash.remove(), 500);
+            } else {
+                addLog(`🏷️ Coupons sent. ${converted} customers decided to buy.`, 'text-cyan-400');
+            }
+        }
+
+        // === 6. LOGS & SCENARIO ===
+        function toggleLogs() {
+            const panel = document.getElementById('logs-panel');
+            const arrow = document.getElementById('log-arrow');
+            if (panel.style.height === '40px') {
+                panel.style.height = 'auto'; // Expand (flex-1 handles it actually, so we toggle classes)
+                panel.classList.remove('h-10');
+                panel.classList.add('flex-1');
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                panel.classList.remove('flex-1');
+                panel.classList.add('h-10');
+                arrow.style.transform = 'rotate(-90deg)';
             }
         }
 
@@ -432,46 +441,39 @@
             document.getElementById('logs').prepend(div);
         }
 
-        // === MAIN LOOP ===
-
-        function init() {
-            renderMap();
-            
-            // Spawn Loop
-            setInterval(() => {
-                if (customers.length < 40) { // More customers allowed in wide map
-                    const c = new Customer();
-                    customers.push(c);
-                    if(Math.random()>0.7) addLog(`New customer ID ${c.id} entered.`);
-                }
-            }, 800);
-
-            // Stats Update
-            setInterval(() => {
-                customers = customers.filter(c => !c.finished);
-                document.getElementById('stat-count').innerText = customers.length;
-                
-                const hesi = customers.filter(c => c.type === 'HESITANT').length;
-                const percent = customers.length ? Math.floor((hesi/customers.length)*100) : 0;
-                document.getElementById('stat-hesi').innerText = percent + "%";
-                
-                let totalFrames = customers.reduce((acc, c) => acc + c.frames, 0);
-                let avg = customers.length ? (totalFrames/customers.length/60).toFixed(0) : 0;
-                document.getElementById('stat-time').innerText = avg + "s";
-
-            }, 500);
-
-            animate();
+        function setScenario(type) {
+            scenario = type;
+            addLog(`Simulation switched to ${type} mode.`);
         }
+
+        // === INIT ===
+        renderMap();
+        
+        // Game Loop
+        setInterval(() => {
+            if (customers.length < 50) customers.push(new Customer());
+        }, 800);
+
+        setInterval(() => {
+            customers = customers.filter(c => !c.finished);
+            document.getElementById('stat-count').innerText = customers.length;
+            document.getElementById('stat-sales').innerText = totalSales;
+            
+            // Calc Mood for Stats HUD
+            let hesi = customers.filter(c => c.type === 'HESITANT').length;
+            let percent = customers.length ? Math.floor((hesi/customers.length)*100) : 0;
+            document.getElementById('stat-hesi').innerText = percent + "%";
+            
+            // Auto Ambience Loop
+            if(autoMode) updateAmbienceAuto();
+
+        }, 500);
 
         function animate() {
             customers.forEach(c => c.update());
             requestAnimationFrame(animate);
         }
-
-        init();
-        // Start in MIXED mode by default as requested
-        setScenario('MIXED'); 
+        animate();
 
     </script>
 </body>
