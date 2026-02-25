@@ -3,408 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuro-Retail OS v3.0 | Fully Adaptive AI</title>
+    <title>Neuro-Retail OS v4.0 | Real-World Scale</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Prompt:wght@300;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
+        /* Grid พื้นหลัง */
         .floor-grid {
-            background-image: radial-gradient(#334155 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: 
+                linear-gradient(rgba(30, 41, 59, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-color: #0b1120;
         }
 
-        .customer-dot { transition: all 0.3s ease; cursor: pointer; }
-        .customer-dot:hover { transform: scale(1.5); box-shadow: 0 0 10px white; z-index: 50; }
+        /* Customer Dot */
+        .customer-dot { transition: transform 0.2s, background-color 0.5s; cursor: pointer; z-index: 20; }
+        .customer-dot:hover { transform: scale(1.8); box-shadow: 0 0 15px white; z-index: 50; }
 
-        /* Animation for Smart Shelf */
-        .smart-shelf-active { animation: glow-border 1.5s infinite alternate; background-color: rgba(234, 179, 8, 0.1); }
-        @keyframes glow-border {
-            from { border-color: #475569; box-shadow: 0 0 0 transparent; }
-            to { border-color: #eab308; box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+        /* CCTV Animation */
+        .cctv-cone {
+            position: absolute; bottom: -60px; left: -20px;
+            width: 80px; height: 60px;
+            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.1), transparent);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            transform-origin: top center;
+            animation: scan 4s infinite ease-in-out alternate;
+            pointer-events: none;
         }
+        @keyframes scan { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 
-        /* Lane Status */
-        .lane-open { border-color: #10b981; color: #10b981; }
-        .lane-closed { border-color: #ef4444; color: #ef4444; opacity: 0.5; }
+        /* Shelf Style */
+        .shelf-box {
+            background: repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #334155 10px, #334155 20px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+        .shelf-active { border-color: #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); }
 
-        ::-webkit-scrollbar { width: 6px; }
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
 <body class="flex h-screen w-screen p-2 gap-2 text-sm">
 
-    <aside class="w-64 bg-slate-900 rounded-lg flex flex-col border border-slate-700 shadow-xl z-20">
-        <div class="p-4 border-b border-slate-700">
-            <h1 class="text-lg font-bold text-cyan-400"><i class="fa-solid fa-brain"></i> NEURO-RETAIL</h1>
-            <p class="text-xs text-slate-500">Adaptive AI System v3.0</p>
+    <aside class="w-72 bg-slate-900 rounded-lg flex flex-col border border-slate-700 shadow-xl z-30">
+        <div class="p-4 border-b border-slate-700 bg-slate-950/50">
+            <h1 class="text-xl font-bold text-cyan-400 tracking-wider"><i class="fa-solid fa-eye"></i> OMNI-RETAIL</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Store Intelligence System v4.0</p>
         </div>
 
         <div class="p-4 flex-1 overflow-y-auto">
-            <h2 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">DEMO SCENARIOS</h2>
-            <div class="space-y-2">
-                <button onclick="setScenario('NORMAL')" class="w-full text-left px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 transition flex items-center gap-2 group">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div> <span>โหมดปกติ (Normal)</span>
-                </button>
-                <button onclick="setScenario('RUSH')" class="w-full text-left px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 transition flex items-center gap-2 group">
-                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div> <span>โหมดรีบเร่ง (Rush)</span>
-                </button>
-                <button onclick="setScenario('HESITANT')" class="w-full text-left px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 transition flex items-center gap-2 group">
-                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div> <span>โหมดลังเล (Hesitant)</span>
-                </button>
-            </div>
+            <div class="mb-6">
+                <h2 class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad"></i> Simulation Scenarios
+                </h2>
+                <div class="space-y-2">
+                    <button onclick="setScenario('MIXED')" class="w-full text-left px-3 py-3 rounded bg-gradient-to-r from-indigo-900 to-slate-800 hover:from-indigo-800 border border-indigo-500/50 transition flex items-center gap-3 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-indigo-500/10 group-hover:bg-indigo-500/20 transition"></div>
+                        <div class="w-3 h-3 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div> 
+                        <span class="font-bold text-white relative z-10">REAL LIFE (MIXED)</span>
+                        <span class="text-[9px] text-indigo-300 ml-auto opacity-70">RECOMMENDED</span>
+                    </button>
 
-            <div class="mt-6 border-t border-slate-800 pt-4">
-                <h2 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">STORE AUTOMATION</h2>
-                <div id="automation-status" class="space-y-2 text-xs">
-                    <div class="flex justify-between items-center bg-slate-950 p-2 rounded">
-                        <span class="text-slate-400">Smart Lighting</span>
-                        <span class="text-green-400">ON</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-slate-950 p-2 rounded">
-                        <span class="text-slate-400">Auto-Checkout</span>
-                        <span id="lane-status-text" class="text-slate-500">STANDBY</span>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="setScenario('NORMAL')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div> Normal
+                        </button>
+                        <button onclick="setScenario('RUSH')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div> Rush Hour
+                        </button>
+                        <button onclick="setScenario('HESITANT')" class="px-2 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div> Hesitant
+                        </button>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-4 p-2 bg-indigo-900/30 border border-indigo-500/30 rounded text-[10px] text-indigo-300">
-                <i class="fa-solid fa-mouse-pointer mr-1"></i> ลองคลิกที่จุดลูกค้าเพื่อดูข้อมูล
+
+            <div class="mb-6">
+                <h2 class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-video"></i> Camera Status
+                </h2>
+                <div class="space-y-2 bg-slate-950 p-3 rounded border border-slate-800">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">CAM-01 (Entrance)</span>
+                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> REC</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">CAM-02 (Aisle L)</span>
+                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> LIVE</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">CAM-03 (Aisle R)</span>
+                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> LIVE</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">CAM-04 (Checkout)</span>
+                        <span class="text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> REC</span>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div class="p-3 bg-slate-950 rounded-b-lg border-t border-slate-800 text-[10px] grid grid-cols-2 gap-2 text-slate-500">
-            <div>LATENCY: <span class="text-green-400">12ms</span></div>
-            <div>GPU: <span class="text-cyan-400">32%</span></div>
+
+            <div class="p-3 bg-slate-800/50 rounded border border-slate-700/50 text-[10px] space-y-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> <span>Normal Shopper</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div> <span>Rushing (High Speed)</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-yellow-500"></div> <span>Hesitant (Needs Help)</span></div>
+            </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col gap-2 relative">
-        <div class="grid grid-cols-5 gap-2 h-20">
-            <div class="bg-slate-800 rounded border border-slate-700 p-2 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Traffic</span>
+    <main class="flex-1 flex flex-col gap-2 overflow-hidden relative">
+        
+        <div class="grid grid-cols-4 gap-2 h-16 shrink-0 z-10">
+            <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
+                <span class="text-[10px] text-slate-400 uppercase">Customers</span>
                 <div class="text-2xl font-bold text-white mono" id="stat-count">0</div>
             </div>
-            <div class="bg-slate-800 rounded border border-slate-700 p-2 flex flex-col justify-center">
+            <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
                 <span class="text-[10px] text-slate-400 uppercase">Avg. Time</span>
                 <div class="text-2xl font-bold text-cyan-400 mono" id="stat-time">0s</div>
             </div>
-            <div class="bg-slate-800 rounded border border-slate-700 p-2 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Hesitation</span>
-                <div class="text-2xl font-bold text-yellow-400 mono" id="stat-hesitation">0%</div>
+             <div class="bg-slate-800 rounded border border-slate-700 px-4 flex flex-col justify-center">
+                <span class="text-[10px] text-slate-400 uppercase">Hesitation Idx</span>
+                <div class="text-2xl font-bold text-yellow-400 mono" id="stat-hesi">0%</div>
             </div>
-            <div class="bg-slate-800 rounded border border-slate-700 p-2 flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 uppercase">Sales (Today)</span>
-                <div class="text-2xl font-bold text-green-400 mono" id="stat-sales">0</div>
-            </div>
-            <div class="bg-slate-800 rounded border border-slate-700 p-2 flex flex-col justify-center relative overflow-hidden">
-                <span class="text-[10px] text-slate-400 uppercase z-10">Store Mood</span>
-                <div class="text-lg font-bold text-white z-10" id="stat-mood">NEUTRAL</div>
-                <div class="absolute right-0 bottom-0 opacity-20 text-4xl" id="mood-icon">😐</div>
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded border border-slate-700 px-4 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase block">Store Status</span>
+                    <div class="text-lg font-bold text-white" id="store-mood">NORMAL</div>
+                </div>
+                <div class="text-3xl" id="mood-icon">🥗</div>
             </div>
         </div>
 
-        <div class="flex-1 bg-slate-900 rounded border border-slate-700 relative overflow-hidden floor-grid shadow-inner select-none" id="store-area">
+        <div class="flex-1 bg-slate-900 rounded border border-slate-700 relative overflow-auto shadow-inner group" id="scroll-container">
             
-            <div id="shelf-a" class="absolute top-[20%] left-[10%] w-[25%] h-[40%] border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center transition-all duration-500">
-                <div class="text-center pointer-events-none">
-                    <div class="text-slate-400 font-bold text-xs">ZONE A: GADGETS</div>
-                    <div class="text-[10px] text-yellow-500 hidden" id="label-a-help">Wait Assistance...</div>
+            <div id="store-world" class="relative h-full w-[2400px] floor-grid">
+                
+                <div class="absolute top-4 left-4 text-xs text-slate-500 bg-slate-900/80 px-2 py-1 rounded border border-slate-700 pointer-events-none z-50">
+                    <i class="fa-solid fa-arrows-left-right mr-1"></i> Scroll to explore the Mega Store
                 </div>
+
+                <div id="shelves-layer"></div>
+
+                <div class="absolute top-[10%] right-[2%] w-[12%] h-[80%] border-l-2 border-dashed border-slate-700 bg-slate-800/30 flex flex-col justify-center items-center gap-4">
+                    <div class="text-slate-500 text-xs -rotate-90 whitespace-nowrap font-bold mb-4">CHECKOUT ZONE</div>
+                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-green-500"><i class="fa-solid fa-cash-register text-green-400"></i></div>
+                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-slate-600 opacity-50"><i class="fa-solid fa-cash-register text-slate-500"></i></div>
+                    <div class="w-12 h-16 bg-slate-700 rounded flex items-center justify-center border-2 border-slate-600 opacity-50"><i class="fa-solid fa-cash-register text-slate-500"></i></div>
+                </div>
+
+                <div id="cameras-layer"></div>
+
+                <div id="customer-layer" class="absolute inset-0 z-10"></div>
+
+                <div id="inspector" class="absolute hidden bg-slate-950/90 border border-cyan-500 text-xs p-3 rounded-lg w-48 shadow-2xl backdrop-blur z-50 pointer-events-none">
+                    <div class="font-bold text-cyan-400 mb-1 border-b border-slate-700 pb-1">CUSTOMER SCAN</div>
+                    <div class="grid grid-cols-2 gap-1 text-slate-300">
+                        <span>ID:</span> <span class="text-white mono" id="ins-id">---</span>
+                        <span>Mood:</span> <span class="font-bold" id="ins-mood">---</span>
+                        <span>Zone:</span> <span class="truncate" id="ins-zone">---</span>
+                        <span>Time:</span> <span class="mono" id="ins-time">---</span>
+                    </div>
+                </div>
+
             </div>
-
-            <div id="shelf-b" class="absolute top-[20%] right-[10%] w-[25%] h-[40%] border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center transition-all duration-500">
-                <div class="text-center pointer-events-none">
-                    <div class="text-slate-400 font-bold text-xs">ZONE B: FASHION</div>
-                    <div class="text-[10px] text-yellow-500 hidden" id="label-b-help">Wait Assistance...</div>
-                </div>
-            </div>
-
-            <div class="absolute bottom-[2%] left-[25%] w-[50%] h-[18%] flex gap-2">
-                <div class="flex-1 border-2 border-green-600 rounded bg-green-900/20 flex flex-col items-center justify-center">
-                    <span class="text-[10px] text-green-400 font-bold">LANE 1</span>
-                    <span class="text-[9px] text-slate-400">OPEN</span>
-                </div>
-                <div id="lane-2" class="flex-1 border-2 border-dashed border-slate-700 rounded bg-slate-800/50 flex flex-col items-center justify-center transition-all duration-500 opacity-50">
-                    <span class="text-[10px] text-slate-500 font-bold" id="lane-2-text">LANE 2</span>
-                    <span class="text-[9px] text-slate-600" id="lane-2-status">CLOSED</span>
-                </div>
-            </div>
-
-            <canvas id="heatmap-canvas" class="absolute top-0 left-0 w-full h-full opacity-50 pointer-events-none"></canvas>
-            <div id="customer-layer" class="absolute inset-0 z-10"></div>
-
-            <div id="inspector-card" class="absolute hidden bg-slate-950/90 border border-cyan-500/50 p-3 rounded-lg shadow-2xl backdrop-blur-sm w-48 z-50 pointer-events-none transition-opacity">
-                <h4 class="text-cyan-400 text-xs font-bold border-b border-slate-700 pb-1 mb-1">CUSTOMER ID: <span id="insp-id" class="mono">---</span></h4>
-                <div class="space-y-1 text-[10px] text-slate-300">
-                    <div class="flex justify-between"><span>State:</span> <span id="insp-state" class="font-bold">---</span></div>
-                    <div class="flex justify-between"><span>Dwell:</span> <span id="insp-time" class="mono">---</span></div>
-                    <div class="flex justify-between"><span>Zone:</span> <span id="insp-zone">---</span></div>
-                </div>
-                <div class="mt-2 text-[9px] text-slate-500 italic text-center">AI Confidence: 98.4%</div>
-            </div>
-
         </div>
+
     </main>
 
-    <aside class="w-80 flex flex-col gap-2">
-        <div class="bg-gradient-to-br from-indigo-950 to-slate-900 p-5 rounded-lg border border-indigo-500/30 shadow-lg relative overflow-hidden min-h-[140px]">
-            <div class="absolute top-3 right-3 opacity-20"><i class="fa-solid fa-robot text-5xl"></i></div>
-            <h3 class="text-indigo-400 text-xs font-bold mb-3 uppercase tracking-wider flex items-center gap-2">
-                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span> AI LIVE ADVICE
-            </h3>
-            <div id="ai-advice" class="text-slate-200 text-sm leading-relaxed">
-                System initializing... waiting for traffic data.
+    <aside class="w-72 flex flex-col gap-2">
+        <div class="bg-gradient-to-b from-indigo-950 to-slate-900 p-4 rounded-lg border border-indigo-500/30 h-40 relative overflow-hidden">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-robot text-indigo-400"></i>
+                <span class="text-[10px] font-bold text-indigo-300 uppercase">AI Recommendations</span>
+            </div>
+            <div id="ai-text" class="text-sm text-slate-200 leading-relaxed h-full overflow-y-auto pr-1">
+                System initializing retail environment map...
             </div>
         </div>
 
-        <div class="flex-1 bg-slate-900 rounded-lg border border-slate-700 flex flex-col overflow-hidden">
-            <div class="p-2 bg-slate-800 border-b border-slate-700 text-xs font-bold text-slate-400">SYSTEM LOGS</div>
-            <div id="log-container" class="flex-1 overflow-y-auto p-2 space-y-1 mono text-[10px]"></div>
+        <div class="flex-1 bg-slate-900 rounded-lg border border-slate-700 flex flex-col">
+            <div class="p-2 bg-slate-800 border-b border-slate-700 text-[10px] font-bold text-slate-400 flex justify-between">
+                <span>BEHAVIOR LOGS</span>
+                <span class="text-green-500">● LIVE</span>
+            </div>
+            <div id="logs" class="flex-1 overflow-y-auto p-2 space-y-1.5 mono text-[10px]"></div>
         </div>
     </aside>
 
     <script>
-        // --- CONFIG ---
-        const store = document.getElementById('store-area');
+        // === CONFIGURATION ===
+        const WORLD_WIDTH = 2400;
+        const WORLD_HEIGHT = document.getElementById('scroll-container').clientHeight || 800;
         const customerLayer = document.getElementById('customer-layer');
-        const heatmapCanvas = document.getElementById('heatmap-canvas');
-        const ctx = heatmapCanvas.getContext('2d');
-        const inspector = document.getElementById('inspector-card');
+        const shelfLayer = document.getElementById('shelves-layer');
+        const camLayer = document.getElementById('cameras-layer');
+        const inspector = document.getElementById('inspector');
         
         let customers = [];
-        let scenario = 'NORMAL';
-        let totalSales = 124; // Start with some fake sales
-        let totalTimeSum = 0;
-        let servedCount = 0;
-        
-        function resizeCanvas() {
-            heatmapCanvas.width = store.clientWidth;
-            heatmapCanvas.height = store.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
+        let scenario = 'MIXED'; // Default to Real Life
+        let timeElapsed = 0;
 
-        // --- CUSTOMER CLASS ---
+        // === DATA: SHELVES GENERATION ===
+        const shelvesData = [
+            { id: 'S1', cat: 'New Arrivals', x: 100, y: 100, w: 200, h: 40, color: 'border-pink-500' },
+            { id: 'S2', cat: 'Promotions', x: 100, y: 300, w: 200, h: 40, color: 'border-pink-500' },
+            
+            { id: 'D1', cat: 'Drinks (Cold)', x: 400, y: 50, w: 40, h: 300, color: 'border-cyan-500' },
+            { id: 'D2', cat: 'Drinks (Hot)', x: 500, y: 50, w: 40, h: 300, color: 'border-cyan-500' },
+            
+            { id: 'F1', cat: 'Snacks', x: 700, y: 150, w: 300, h: 60, color: 'border-orange-500' },
+            { id: 'F2', cat: 'Instant Food', x: 700, y: 350, w: 300, h: 60, color: 'border-orange-500' },
+            
+            { id: 'G1', cat: 'Gadgets', x: 1100, y: 100, w: 100, h: 200, color: 'border-purple-500' },
+            { id: 'G2', cat: 'Accessories', x: 1300, y: 100, w: 100, h: 200, color: 'border-purple-500' },
+            
+            { id: 'H1', cat: 'Home Decor', x: 1100, y: 400, w: 300, h: 80, color: 'border-teal-500' },
+            
+            { id: 'T1', cat: 'Toys', x: 1600, y: 100, w: 200, h: 200, color: 'border-yellow-500' } // Big square island
+        ];
+
+        // === DATA: CAMERAS ===
+        const camerasData = [
+            { x: 20, y: 20, rot: 45 },
+            { x: 600, y: 20, rot: 0 },
+            { x: 1200, y: 20, rot: 0 },
+            { x: 1800, y: 20, rot: -45 },
+            { x: 2300, y: 300, rot: -90 } // Checkout Cam
+        ];
+
+        // === SETUP FUNCTIONS ===
+        
+        function renderMap() {
+            // 1. Render Shelves
+            shelvesData.forEach(s => {
+                const el = document.createElement('div');
+                el.className = `absolute shelf-box border-2 ${s.color} rounded flex items-center justify-center text-xs font-bold text-slate-300 text-center opacity-80`;
+                el.style.left = s.x + 'px';
+                el.style.top = s.y + 'px';
+                el.style.width = s.w + 'px';
+                el.style.height = s.h + 'px';
+                el.id = `shelf-${s.id}`;
+                el.innerHTML = `<span class="bg-slate-900/80 px-1 rounded">${s.cat}</span>`;
+                shelfLayer.appendChild(el);
+            });
+
+            // 2. Render Cameras
+            camerasData.forEach((c, idx) => {
+                const el = document.createElement('div');
+                el.className = 'absolute w-8 h-8 z-20';
+                el.style.left = c.x + 'px';
+                el.style.top = c.y + 'px';
+                el.innerHTML = `
+                    <div class="relative">
+                        <i class="fa-solid fa-video text-slate-400 text-xl drop-shadow-lg" style="transform: rotate(${c.rot}deg)"></i>
+                        <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_lime]"></div>
+                        <div class="cctv-cone" style="transform: rotate(${c.rot}deg) translateX(-50%)"></div>
+                    </div>
+                `;
+                camLayer.appendChild(el);
+            });
+        }
+
+        // === CUSTOMER LOGIC ===
+
         class Customer {
             constructor() {
-                this.id = Math.floor(Math.random() * 9000) + 1000;
-                this.x = Math.random() * (store.clientWidth - 20);
-                this.y = Math.random() > 0.5 ? store.clientHeight - 10 : 10;
-                this.vx = (Math.random() - 0.5) * 1.5;
-                this.vy = (Math.random() - 0.5) * 1.5;
+                this.id = Math.floor(Math.random() * 90000) + 10000;
+                this.x = 10; // Start at left entrance
+                this.y = Math.random() * (WORLD_HEIGHT - 100) + 50;
+                this.vx = (Math.random() * 2) + 0.5; // Always move right initially
+                this.vy = (Math.random() - 0.5) * 2;
                 
-                this.state = 'WALKING';
-                this.zone = 'Walkway';
-                this.dwellFrames = 0;
-                this.isFinished = false;
-                this.color = '#10b981';
+                this.width = 12; 
+                this.height = 12;
+                this.frames = 0;
+                this.finished = false;
                 
-                // Element Creation
+                // Personality (The Core of "Mixed Mode")
+                const rand = Math.random();
+                if (scenario === 'RUSH') this.type = 'RUSH';
+                else if (scenario === 'HESITANT') this.type = 'HESITANT';
+                else if (scenario === 'NORMAL') this.type = 'NORMAL';
+                else {
+                    // MIXED MODE
+                    if (rand < 0.2) this.type = 'RUSH';
+                    else if (rand > 0.8) this.type = 'HESITANT';
+                    else this.type = 'NORMAL';
+                }
+
+                // Apply Stats based on Type
+                if (this.type === 'RUSH') {
+                    this.vx = 4; // Fast
+                    this.color = '#ef4444';
+                    this.targetZone = 'Checkout';
+                } else if (this.type === 'HESITANT') {
+                    this.vx = 0.8;
+                    this.color = '#eab308';
+                    this.stopChance = 0.05; // Stops often
+                } else {
+                    this.vx = 1.5;
+                    this.color = '#10b981';
+                    this.stopChance = 0.01;
+                }
+
+                // Element
                 this.el = document.createElement('div');
-                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot shadow-sm border border-slate-900';
+                this.el.className = 'absolute w-3 h-3 rounded-full customer-dot border border-white/20 shadow-sm';
                 this.el.style.backgroundColor = this.color;
                 
-                // Click Event for Inspection
-                this.el.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Don't bubble
-                    showInspector(this, e.clientX, e.clientY);
-                });
-
+                // Hover/Inspect
+                this.el.addEventListener('mousemove', (e) => showInspector(e, this));
+                this.el.addEventListener('mouseleave', () => hideInspector());
+                
                 customerLayer.appendChild(this.el);
-
-                if (scenario === 'RUSH') this.setRushTarget();
-            }
-
-            setRushTarget() {
-                this.target = { x: store.clientWidth * (Math.random() > 0.5 ? 0.35 : 0.65), y: store.clientHeight * 0.85 }; // Aim for either lane
-                this.color = '#ef4444';
             }
 
             update() {
-                if (this.isFinished) return;
-                this.dwellFrames++;
+                this.frames++;
 
                 // Physics
-                if (scenario === 'RUSH' && this.target) {
-                    const dx = this.target.x - this.x;
-                    const dy = this.target.y - this.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist > 15) {
-                        this.vx = (dx/dist) * 4;
-                        this.vy = (dy/dist) * 4;
-                    } else {
-                        this.finishShopping(true); // Bought!
-                    }
-                } else if (scenario === 'HESITANT') {
-                    this.vx *= 0.9; this.vy *= 0.9; // Slow down
-                    if(Math.random()<0.1) { this.vx += (Math.random()-0.5); this.vy += (Math.random()-0.5); }
-                } else {
-                    // Random walk
-                    if(Math.random()<0.05) this.vx += (Math.random()-0.5);
-                    if(Math.random()<0.05) this.vy += (Math.random()-0.5);
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Random behavior
+                if (Math.random() < 0.02) this.vy += (Math.random() - 0.5) * 2; // Wander Y
+                if (Math.random() < 0.01) this.vx += (Math.random() - 0.5); // Wander X speed
+
+                // Hesitant Logic: Stop & Go
+                if (this.type === 'HESITANT' && Math.random() < 0.02) {
+                    this.vx = 0; this.vy = 0; // Stop
+                    setTimeout(() => { 
+                        if(!this.finished) {
+                            this.vx = (Math.random() - 0.5); 
+                            this.vy = (Math.random() - 0.5); 
+                        }
+                    }, 2000); // Wait 2s
                 }
 
-                // Bounce
-                this.x += this.vx; this.y += this.vy;
-                if(this.x <= 5 || this.x >= store.clientWidth-15) this.vx *= -1;
-                if(this.y <= 5 || this.y >= store.clientHeight-15) this.vy *= -1;
-
-                // Zone Logic
-                this.checkZone();
-                this.analyzeState();
+                // Boundaries
+                if (this.y < 10 || this.y > WORLD_HEIGHT - 30) this.vy *= -1;
                 
+                // Keep moving right mostly (Flow of store)
+                if (this.vx < 0.2 && this.type !== 'HESITANT') this.vx += 0.1;
+
+                // Checkout Zone Reached (Far Right)
+                if (this.x > WORLD_WIDTH - 200) {
+                    this.finished = true;
+                    this.el.remove();
+                    addLog(`Customer #${this.id} checked out (${this.type})`, this.type === 'RUSH' ? 'text-red-400' : 'text-green-400');
+                }
+
                 // Render
                 this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
-                this.el.style.backgroundColor = this.color;
             }
 
-            checkZone() {
-                const w = store.clientWidth; const h = store.clientHeight;
-                if (this.x > w*0.1 && this.x < w*0.35 && this.y > h*0.2 && this.y < h*0.6) this.zone = 'Zone A (Gadgets)';
-                else if (this.x > w*0.65 && this.x < w*0.9 && this.y > h*0.2 && this.y < h*0.6) this.zone = 'Zone B (Fashion)';
-                else if (this.y > h*0.8) this.zone = 'Checkout';
-                else this.zone = 'Walkway';
-            }
-
-            analyzeState() {
-                const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
-                if (scenario === 'RUSH' || speed > 3) { this.state = 'RUSHING'; this.color = '#ef4444'; }
-                else if ((this.zone.includes('Zone')) && this.dwellFrames > 120 && speed < 1) { this.state = 'HESITANT'; this.color = '#eab308'; }
-                else { this.state = 'BROWSING'; this.color = '#10b981'; }
-            }
-
-            finishShopping(purchased) {
-                this.isFinished = true;
-                this.el.remove();
-                if (purchased) {
-                    totalSales++;
-                    addLog(`💰 Sale completed! Customer #${this.id}`, 'text-green-400');
-                    // Floating text effect (Optional simple visual)
+            getCurrentZone() {
+                // Simple Hit Test with Shelves data
+                for (let s of shelvesData) {
+                    if (this.x >= s.x - 20 && this.x <= s.x + s.w + 20 &&
+                        this.y >= s.y - 20 && this.y <= s.y + s.h + 20) {
+                        return s.cat;
+                    }
                 }
-                totalTimeSum += this.dwellFrames/60;
-                servedCount++;
+                if (this.x > WORLD_WIDTH - 300) return 'Checkout Queue';
+                return 'Aisle / Walkway';
             }
         }
 
-        // --- SYSTEM LOGIC ---
+        // === SYSTEM CONTROLS ===
 
-        function showInspector(cust, mouseX, mouseY) {
+        function showInspector(e, cust) {
             inspector.classList.remove('hidden');
-            // Adjust position relative to store area or simple absolute
-            const rect = store.getBoundingClientRect();
-            inspector.style.left = (cust.x + 20) + 'px'; 
-            inspector.style.top = (cust.y) + 'px';
-            
-            document.getElementById('insp-id').innerText = cust.id;
-            document.getElementById('insp-state').innerText = cust.state;
-            document.getElementById('insp-state').className = cust.state === 'RUSHING' ? 'text-red-400 font-bold' : (cust.state === 'HESITANT' ? 'text-yellow-400 font-bold' : 'text-green-400 font-bold');
-            document.getElementById('insp-time').innerText = (cust.dwellFrames / 60).toFixed(1) + 's';
-            document.getElementById('insp-zone').innerText = cust.zone;
-            
-            // Auto hide after 3 sec
-            clearTimeout(window.inspectorTimer);
-            window.inspectorTimer = setTimeout(() => inspector.classList.add('hidden'), 3000);
+            // Position near cursor but fixed relative to viewport
+            // We need to calculate position relative to the window, not the scroll map
+            const rect = e.target.getBoundingClientRect();
+            inspector.style.left = (rect.left + 20) + 'px';
+            inspector.style.top = (rect.top - 20) + 'px';
+
+            document.getElementById('ins-id').innerText = cust.id;
+            document.getElementById('ins-mood').innerText = cust.type;
+            document.getElementById('ins-mood').className = `font-bold ${cust.type==='RUSH'?'text-red-400':(cust.type==='HESITANT'?'text-yellow-400':'text-green-400')}`;
+            document.getElementById('ins-zone').innerText = cust.getCurrentZone();
+            document.getElementById('ins-time').innerText = Math.floor(cust.frames / 60) + 's';
+        }
+
+        function hideInspector() {
+            inspector.classList.add('hidden');
         }
 
         function setScenario(type) {
             scenario = type;
-            addLog(`🔄 SYSTEM: Switching to [${type}] Protocol`, 'text-cyan-300');
-            
-            const advice = document.getElementById('ai-advice');
-            const lane2 = document.getElementById('lane-2');
-            const laneText = document.getElementById('lane-2-text');
-            const laneStatus = document.getElementById('lane-2-status');
-            const automationStatus = document.getElementById('lane-status-text');
+            const mood = document.getElementById('store-mood');
+            const icon = document.getElementById('mood-icon');
+            const ai = document.getElementById('ai-text');
 
-            // Reset Styles
-            document.getElementById('shelf-a').classList.remove('smart-shelf-active');
-            document.getElementById('shelf-b').classList.remove('smart-shelf-active');
-            document.getElementById('label-a-help').classList.add('hidden');
-            document.getElementById('label-b-help').classList.add('hidden');
-
-            if (type === 'RUSH') {
-                advice.innerHTML = `<b class="text-red-300">ALERT: High Traffic Volume</b><br>Auto-opening Lane 2 to reduce bottleneck. Showing express items on main displays.`;
-                // Open Lane 2
-                lane2.className = "flex-1 border-2 border-green-600 rounded bg-green-900/20 flex flex-col items-center justify-center transition-all duration-500";
-                laneText.className = "text-[10px] text-green-400 font-bold";
-                laneStatus.innerText = "OPEN (AUTO)";
-                laneStatus.className = "text-[9px] text-green-300";
-                automationStatus.innerText = "ACTIVE (LANE 2 OPEN)";
-                automationStatus.className = "text-green-400 animate-pulse";
-                
-                customers.forEach(c => c.setRushTarget()); // Force rush behavior
-
+            if (type === 'MIXED') {
+                mood.innerText = 'REAL LIFE (MIXED)'; mood.className = "text-lg font-bold text-indigo-400"; icon.innerText = "🌍";
+                ai.innerHTML = "<b>Mode: Real World Simulation</b><br>Spawning customers with varied traits (Probability: 20% Rush, 20% Hesitant, 60% Normal). AI is monitoring all zones.";
+                addLog("Switched to MIXED REALITY mode.", "text-indigo-400");
+            } else if (type === 'RUSH') {
+                mood.innerText = 'RUSH HOUR'; mood.className = "text-lg font-bold text-red-400"; icon.innerText = "🔥";
+                ai.innerHTML = "<b>Mode: High Traffic</b><br>Detected crowd surge. Optimizing checkout lanes and reducing dwell time alerts.";
+                addLog("Switched to RUSH mode.", "text-red-400");
             } else if (type === 'HESITANT') {
-                advice.innerHTML = `<b class="text-yellow-300">INSIGHT: High Hesitation Detected</b><br>Activating smart shelves in Zone A & B to display reviews/comparisons. Staff notified.`;
-                // Highlight Shelves
-                document.getElementById('shelf-a').classList.add('smart-shelf-active');
-                document.getElementById('shelf-b').classList.add('smart-shelf-active');
-                document.getElementById('label-a-help').classList.remove('hidden');
-                document.getElementById('label-b-help').classList.remove('hidden');
-                
-                // Close Lane 2
-                closeLane2();
-                automationStatus.innerText = "STANDBY";
-                automationStatus.className = "text-slate-500";
-
+                mood.innerText = 'LOW CONFIDENCE'; mood.className = "text-lg font-bold text-yellow-400"; icon.innerText = "🤔";
+                ai.innerHTML = "<b>Mode: Hesitation Analysis</b><br>Customers are browsing but not buying. Suggesting proactive assistance in Gadget & Toy zones.";
+                addLog("Switched to HESITANT mode.", "text-yellow-400");
             } else {
-                advice.innerHTML = `<b class="text-green-300">STATUS: Optimal Flow</b><br>Store operating within normal parameters. Energy saving mode enabled.`;
-                closeLane2();
-                automationStatus.innerText = "STANDBY";
-                automationStatus.className = "text-slate-500";
+                mood.innerText = 'NORMAL'; mood.className = "text-lg font-bold text-green-400"; icon.innerText = "🥗";
+                ai.innerHTML = "<b>Mode: Standard</b><br>Store operations normal. Monitoring cameras for anomalies.";
+                addLog("Switched to NORMAL mode.", "text-green-400");
             }
         }
 
-        function closeLane2() {
-            const lane2 = document.getElementById('lane-2');
-            lane2.className = "flex-1 border-2 border-dashed border-slate-700 rounded bg-slate-800/50 flex flex-col items-center justify-center transition-all duration-500 opacity-50";
-            document.getElementById('lane-2-text').className = "text-[10px] text-slate-500 font-bold";
-            document.getElementById('lane-2-status').innerText = "CLOSED";
-            document.getElementById('lane-2-status').className = "text-[9px] text-slate-600";
-        }
-
-        function addLog(msg, colorClass='text-slate-400') {
+        function addLog(msg, color='text-slate-400') {
             const div = document.createElement('div');
             const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            div.innerHTML = `<span class="opacity-40 mr-1">[${time}]</span> <span class="${colorClass}">${msg}</span>`;
-            document.getElementById('log-container').prepend(div);
+            div.innerHTML = `<span class="opacity-50 text-[9px] mr-1">${time}</span> <span class="${color}">${msg}</span>`;
+            document.getElementById('logs').prepend(div);
         }
 
-        // --- LOOP ---
+        // === MAIN LOOP ===
+
         function init() {
+            renderMap();
+            
+            // Spawn Loop
             setInterval(() => {
-                const limit = scenario === 'RUSH' ? 30 : 15;
-                if(customers.length < limit) customers.push(new Customer());
-            }, scenario === 'RUSH' ? 600 : 1500);
+                if (customers.length < 40) { // More customers allowed in wide map
+                    const c = new Customer();
+                    customers.push(c);
+                    if(Math.random()>0.7) addLog(`New customer ID ${c.id} entered.`);
+                }
+            }, 800);
 
             // Stats Update
             setInterval(() => {
-                customers = customers.filter(c => !c.isFinished);
-                
-                // Calc stats
-                let hesi = customers.filter(c => c.state === 'HESITANT').length;
-                let rush = customers.filter(c => c.state === 'RUSHING').length;
-                let total = customers.length || 1;
-                
-                // Update DOM
+                customers = customers.filter(c => !c.finished);
                 document.getElementById('stat-count').innerText = customers.length;
-                document.getElementById('stat-sales').innerText = totalSales;
-                document.getElementById('stat-hesitation').innerText = Math.floor((hesi/total)*100) + "%";
                 
-                let avgTime = servedCount > 0 ? (totalTimeSum/servedCount) : 0;
-                document.getElementById('stat-time').innerText = avgTime.toFixed(0) + "s";
-
-                // Mood
-                const moodEl = document.getElementById('stat-mood');
-                const iconEl = document.getElementById('mood-icon');
-                if(scenario === 'RUSH') { moodEl.innerText="HIGH TRAFFIC"; moodEl.className="text-lg font-bold text-red-400 z-10 animate-pulse"; iconEl.innerText="🔥"; }
-                else if(scenario === 'HESITANT') { moodEl.innerText="CONSIDERING"; moodEl.className="text-lg font-bold text-yellow-400 z-10"; iconEl.innerText="🤔"; }
-                else { moodEl.innerText="OPTIMAL"; moodEl.className="text-lg font-bold text-green-400 z-10"; iconEl.innerText="🌿"; }
+                const hesi = customers.filter(c => c.type === 'HESITANT').length;
+                const percent = customers.length ? Math.floor((hesi/customers.length)*100) : 0;
+                document.getElementById('stat-hesi').innerText = percent + "%";
+                
+                let totalFrames = customers.reduce((acc, c) => acc + c.frames, 0);
+                let avg = customers.length ? (totalFrames/customers.length/60).toFixed(0) : 0;
+                document.getElementById('stat-time').innerText = avg + "s";
 
             }, 500);
 
@@ -412,14 +465,13 @@
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.05)';
-            ctx.fillRect(0,0, heatmapCanvas.width, heatmapCanvas.height);
             customers.forEach(c => c.update());
             requestAnimationFrame(animate);
         }
 
-        setScenario('NORMAL');
         init();
+        // Start in MIXED mode by default as requested
+        setScenario('MIXED'); 
 
     </script>
 </body>
